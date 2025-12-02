@@ -10,7 +10,7 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
 # Install the headless awusb manager.
 # The .deb is embeded in this repo because their website is not always up.
 # https://hub.digi.com/support/products/infrastructure-management/digi-anywhereusb-2-plus/
-COPY --link awusbmanager-headless_1.2_amd64.deb /
+COPY awusbmanager-headless_1.2_amd64.deb /
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ./awusbmanager-headless_1.2_amd64.deb \
     && rm -rf /var/lib/apt/lists/* \
