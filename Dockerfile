@@ -12,6 +12,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN python -m venv /venv
 ENV PATH=/venv/bin:$PATH
 
+# Install the headless awusb manager
+# deb embeded in this repo because their website is not always up
+COPY --link awusbmanager-headless_1.2_amd64.deb /
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ./awusbmanager-headless_1.2_amd64.deb \
+    && rm -rf /var/lib/apt/lists/* \
+
 # The build stage installs the context into the venv
 FROM developer AS build
 # Requires buildkit 0.17.0
