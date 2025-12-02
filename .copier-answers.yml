@@ -1,0 +1,17 @@
+# Changes here will be overwritten by Copier
+_commit: 4.3.0
+_src_path: https://github.com/diamondlightsource/python-copier-template
+author_email: giles.knap@diamond.ac.uk
+author_name: Giles Knap
+description: a container that mounts remote devices locally using anywhereusb
+distribution_name: awusb-client
+docker: true
+docker_debug: false
+docs_type: README
+git_platform: github.com
+github_org: epics-containers
+package_name: awusb_client
+pypi: false
+repo_name: awusb-client
+strict_typing: true
+type_checker: pyright
