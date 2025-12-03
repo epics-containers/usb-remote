@@ -11,4 +11,3 @@ Source          | <https://github.com/epics-containers/awusb-client>
 :---:           | :---:
 Docker          | `docker run ghcr.io/epics-containers/awusb-client:latest`
 Releases        | <https://github.com/epics-containers/awusb-client/releases>
-
