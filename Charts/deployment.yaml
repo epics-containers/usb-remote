@@ -35,20 +35,18 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
             privileged: false
-            runAsUser: 37149
-            runAsGroup: 37149
+            # runAsUser: 37149
+            # runAsGroup: 37149
           tty: true
-          volumeMounts:
-            - mountPath: /tmp/awusb_ipc
-              name: awusb-ipc
+          # volumeMounts:
+          #   - mountPath: /tmp/awusb_ipc/socket
+          #     name: awusb-ipc
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       terminationGracePeriodSeconds: 3
-      volumes:
-        - name: awusb-ipc
-          hostPath:
-            path: /tmp/awusb_ipc
-            type: Directory
-
+      # volumes:
+      #   - name: awusb-ipc
+      #     hostPath:
+      #       path: /tmp/awusb_ipc/socket
       nodeSelector:
-        kubernetes.io/hostname: b01-1-k8s-serv-01
+        kubernetes.io/hostname: b01-1-k8s-serv-01.diamond.ac.uk

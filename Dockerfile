@@ -26,6 +26,7 @@ FROM ubuntu:noble AS runtime
 RUN apt-get update && apt-get install -y --no-install-recommends \
     sudo \
     busybox \
+    usbutils \
     && rm -rf /var/lib/apt/lists/* \
     && busybox --install -s
 
