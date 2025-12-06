@@ -18,7 +18,7 @@ app = typer.Typer()
 def version_callback(value: bool) -> None:
     """Print version and exit."""
     if value:
-        typer.echo(f"awusb-client {__version__}")
+        typer.echo(f"awusb {__version__}")
         raise typer.Exit()
 
 

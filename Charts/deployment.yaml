@@ -29,7 +29,7 @@ spec:
               value: bl01c
             - name: DOMAIN
               value: b01-1
-          image: ghcr.io/epics-containers/awusb-client:0.0.1b3
+          image: ghcr.io/epics-containers/awusb:0.0.1b3
           imagePullPolicy: Always
           name: b01-1-awusb
           securityContext:

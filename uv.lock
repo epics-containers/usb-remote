@@ -12,7 +12,7 @@ wheels = [
 ]
 
 [[package]]
-name = "awusb-client"
+name = "awusb"
 source = { editable = "." }
 dependencies = [
     { name = "pydantic" },

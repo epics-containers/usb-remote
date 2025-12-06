@@ -3,7 +3,7 @@ requires = ["setuptools>=64", "setuptools_scm[toml]>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "awusb-client"
+name = "awusb"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: Apache Software License",
@@ -35,10 +35,10 @@ dev = [
 ]
 
 [project.scripts]
-awusb-client = "awusb_client.__main__:main"
+awusb = "awusb_client.__main__:main"
 
 [project.urls]
-GitHub = "https://github.com/epics-containers/awusb-client"
+GitHub = "https://github.com/epics-containers/awusb"
 
 [[project.authors]] # Further authors may be added by duplicating this section
 email = "giles.knap@diamond.ac.uk"
