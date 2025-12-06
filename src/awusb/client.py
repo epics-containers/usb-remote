@@ -49,7 +49,7 @@ def list_devices(server_host="localhost", server_port=5000) -> list[UsbDevice]:
 
 def attach_device(
     args: AttachRequest, server_host="localhost", server_port=5000
-) -> bool:
+) -> UsbDevice:
     """
     Request to attach a USB device from the server.
 
@@ -73,4 +73,4 @@ def attach_device(
             ["sudo", "usbip", "attach", "-r", server_host, "-b", response.data.bus_id]
         )
 
-        return response.status == "success"
+        return response.data

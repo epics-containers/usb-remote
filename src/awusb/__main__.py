@@ -8,7 +8,7 @@ from . import __version__
 from .client import attach_device, list_devices
 from .models import AttachRequest
 from .server import CommandServer
-from .usbdevice import get_devices
+from .usbdevice import UsbDevice, get_devices
 
 __all__ = ["main"]
 
@@ -67,6 +67,17 @@ def list(
         print(device)
 
 
+def attach_detach(detach: bool = False, **kwargs) -> UsbDevice:
+    """Attach or detach a USB device from the server."""
+    args = AttachRequest(detach=detach, **kwargs)
+    result = attach_device(
+        args=args,
+        server_host=kwargs.get("host", "localhost"),
+        server_port=5000,
+    )
+    return result
+
+
 @app.command()
 def attach(
     id: str | None = typer.Option(None, "--id", "-d", help="Device ID e.g. 0bda:5400"),
@@ -87,21 +98,10 @@ def attach(
     ),
 ) -> None:
     """Attach a USB device from the server."""
-    args = AttachRequest(
-        id=id,
-        bus=bus,
-        serial=serial,
-        desc=desc,
-        first=first,
+    result = attach_detach(
+        False, id=id, bus=bus, desc=desc, first=first, serial=serial, host=host
     )
-    result = attach_device(
-        args=args,
-        server_host=host if host else "localhost",
-        server_port=5000,
-    )
-
-    if result:
-        typer.echo("OK")
+    typer.echo(f"Attached to:\n{result}")
 
 
 def main(args: Sequence[str] | None = None) -> None:

@@ -31,10 +31,12 @@ class CommandServer:
         args: AttachRequest,
     ) -> UsbDevice:
         """Handle the 'attach' command with optional arguments."""
-        device = get_device(**args.model_dump(exclude={"command"}))
-        print(f"binding:\n{device}")
+        device = get_device(**args.model_dump(exclude={"command", "detach"}))
+        detach = args.detach
         run_command(["sudo", "usbip", "unbind", "-b", device.bus_id], check=False)
-        run_command(["sudo", "usbip", "bind", "-b", device.bus_id])
+        if not detach:
+            print(f"binding:\n{device}")
+            run_command(["sudo", "usbip", "bind", "-b", device.bus_id])
         return device
 
     def _send_response(

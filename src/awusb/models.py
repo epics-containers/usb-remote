@@ -22,6 +22,7 @@ class AttachRequest(BaseModel):
     serial: str | None = None
     desc: str | None = None
     first: bool = False
+    detach: bool = False
 
 
 class ListResponse(BaseModel):
