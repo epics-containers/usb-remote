@@ -22,9 +22,21 @@ servers:
   - raspberrypi
   - 192.168.1.100
   - usb-server-1.local
+
+# Optional: Connection timeout in seconds (default: 5.0)
+timeout: 5.0
 ```
 
 See `awusb.config.example` for a sample configuration file.
+
+### Connection Timeout
+
+The `timeout` setting controls how long to wait when connecting to each server before giving up. This prevents the client from hanging when a server is unreachable. The default is 5 seconds, but you can adjust it based on your network conditions:
+
+- **Fast local network**: Use a shorter timeout (e.g., `2.0` seconds)
+- **Slow or remote servers**: Use a longer timeout (e.g., `10.0` seconds)
+
+When a server times out, it's logged as a warning and skipped, allowing other servers to be queried.
 
 ### Behavior
 

@@ -8,6 +8,7 @@ import yaml
 logger = logging.getLogger(__name__)
 
 DEFAULT_CONFIG_PATH = Path.home() / ".config" / "awusb" / "awusb.config"
+DEFAULT_TIMEOUT = 5.0
 
 
 def get_servers(config_path: Path | None = None) -> list[str]:
@@ -46,6 +47,42 @@ def get_servers(config_path: Path | None = None) -> list[str]:
     except Exception as e:
         logger.error(f"Error reading config file {config_path}: {e}")
         return []
+
+
+def get_timeout(config_path: Path | None = None) -> float:
+    """
+    Read connection timeout from config file.
+
+    Args:
+        config_path: Path to config file. If None, uses default location.
+
+    Returns:
+        Timeout in seconds. Returns default if not configured.
+    """
+    if config_path is None:
+        config_path = DEFAULT_CONFIG_PATH
+
+    if not config_path.exists():
+        return DEFAULT_TIMEOUT
+
+    try:
+        with open(config_path) as f:
+            config = yaml.safe_load(f)
+
+        if config is None:
+            return DEFAULT_TIMEOUT
+
+        timeout = config.get("timeout", DEFAULT_TIMEOUT)
+        if not isinstance(timeout, (int, float)) or timeout <= 0:
+            logger.warning(f"Invalid timeout config in {config_path}, using default")
+            return DEFAULT_TIMEOUT
+
+        logger.debug(f"Using timeout: {timeout}s")
+        return float(timeout)
+
+    except Exception as e:
+        logger.error(f"Error reading config file {config_path}: {e}")
+        return DEFAULT_TIMEOUT
 
 
 def save_servers(servers: list[str], config_path: Path | None = None) -> None:

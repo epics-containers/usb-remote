@@ -10,3 +10,8 @@ servers:
   - raspberrypi
   - 192.168.1.100
   - usb-server-1.local
+
+# Connection timeout in seconds (default: 5.0)
+# Controls how long to wait when connecting to each server
+# Useful to prevent hanging when servers are unreachable
+timeout: 5.0
