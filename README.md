@@ -96,3 +96,62 @@ awusb attach --desc "Camera" --host 192.168.1.100
 # Detach with first match (if same device attached from multiple servers)
 awusb detach --desc "Camera" --first
 ```
+
+## Installing as a Service
+
+You can install the awusb server as a systemd service to run automatically at boot.
+
+### User Service (Recommended)
+
+Install as a user service (runs when you log in):
+
+```bash
+# Install the service
+awusb install-service
+
+# Enable it to start on login
+systemctl --user enable awusb.service
+
+# Start the service now
+systemctl --user start awusb.service
+
+# Check status
+systemctl --user status awusb.service
+
+# View logs
+journalctl --user -u awusb.service -f
+```
+
+### System Service
+
+Install as a system service (runs at boot, before login):
+
+```bash
+# Install as system service (requires sudo)
+sudo awusb install-service --system
+
+# Enable and start
+sudo systemctl enable awusb.service
+sudo systemctl start awusb.service
+
+# Check status
+sudo systemctl status awusb.service
+```
+
+### Uninstalling
+
+```bash
+# Uninstall user service
+awusb uninstall-service
+
+# Uninstall system service (requires sudo)
+sudo awusb uninstall-service --system
+```
+
+### Service Features
+
+- **Automatic restart**: Service restarts automatically if it crashes
+- **Security hardening**: Runs with limited privileges
+- **Logging**: All output is captured by systemd journal
+- **Boot persistence**: Can be enabled to start automatically
+

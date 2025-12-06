@@ -12,6 +12,7 @@ from .client import attach_detach_device, list_devices
 from .config import get_servers
 from .models import AttachRequest
 from .server import CommandServer
+from .service import install_systemd_service, uninstall_systemd_service
 from .usbdevice import UsbDevice, get_devices
 
 __all__ = ["main"]
@@ -242,6 +243,44 @@ def detach(
         typer.echo(f"Detached from device on {server}:\n{result}")
     else:
         typer.echo(f"Detached from:\n{result}")
+
+
+@app.command()
+def install_service(
+    system: bool = typer.Option(
+        False,
+        "--system",
+        help="Install as system service (requires sudo/root)",
+    ),
+    user: str | None = typer.Option(
+        None,
+        "--user",
+        "-u",
+        help="User to run the service as (default: current user)",
+    ),
+) -> None:
+    """Install awusb server as a systemd service."""
+    try:
+        install_systemd_service(user=user, system_wide=system)
+    except RuntimeError as e:
+        typer.echo(f"Installation failed: {e}", err=True)
+        raise typer.Exit(1)
+
+
+@app.command()
+def uninstall_service(
+    system: bool = typer.Option(
+        False,
+        "--system",
+        help="Uninstall system service (requires sudo/root)",
+    ),
+) -> None:
+    """Uninstall awusb server systemd service."""
+    try:
+        uninstall_systemd_service(system_wide=system)
+    except RuntimeError as e:
+        typer.echo(f"Uninstallation failed: {e}", err=True)
+        raise typer.Exit(1)
 
 
 def main(args: Sequence[str] | None = None) -> None:
