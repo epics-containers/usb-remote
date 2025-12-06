@@ -92,6 +92,7 @@ def attach(
         bus=bus,
         serial=serial,
         desc=desc,
+        first=first,
     )
     result = attach_device(
         args=args,
@@ -105,7 +106,10 @@ def attach(
 
 def main(args: Sequence[str] | None = None) -> None:
     """Argument parser for the CLI."""
-    app()
+    try:
+        app()
+    except RuntimeError as e:
+        typer.echo(f"Error: {e}", err=True)
 
 
 if __name__ == "__main__":

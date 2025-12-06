@@ -10,7 +10,7 @@ from .models import (
     ListRequest,
     ListResponse,
 )
-from .usbdevice import UsbDevice, get_devices
+from .usbdevice import UsbDevice, get_device, get_devices
 
 
 class CommandServer:
@@ -31,8 +31,8 @@ class CommandServer:
         args: AttachRequest,
     ) -> bool:
         """Handle the 'attach' command with optional arguments."""
-        # TODO: Implement attach logic
-
+        device = get_device(**args.model_dump(exclude={"command"}))
+        print(f"Attaching device: {device}")
         return True
 
     def _send_response(

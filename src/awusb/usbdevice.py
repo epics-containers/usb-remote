@@ -104,6 +104,51 @@ class UsbDevice(BaseModel):
         )
 
 
+def get_device(
+    id: str, bus: str, desc: str, first: bool, serial: str | None = None
+) -> UsbDevice:
+    """
+    Retrieve a USB device based on filtering criteria.
+
+    Args:
+        id: The device ID in the format "vendor:product" (e.g., "0bda:5400")
+        bus: The bus ID string (e.g., "1-2.3.4")
+        desc: A substring to match in the device description
+        first: Whether to return the first matching device
+    Returns:
+        A UsbDevice instance matching the criteria.
+    """
+    devices = get_devices()
+    filtered_devices = []
+
+    for device in devices:
+        if id:
+            vid, pid = id.split(":")
+            if (
+                device.vendor_id.lower() != vid.lower()
+                or device.product_id.lower() != pid.lower()
+            ):
+                continue
+        if bus and device.bus_id != bus:
+            continue
+        if desc and desc.lower() not in device.description.lower():
+            continue
+        filtered_devices.append(device)
+
+    if not filtered_devices:
+        raise ValueError("No matching USB device found.")
+
+    if first:
+        return filtered_devices[0]
+
+    if len(filtered_devices) > 1:
+        raise ValueError(
+            "Multiple matching USB devices found. Please refine your criteria."
+        )
+
+    return filtered_devices[0]
+
+
 def get_devices() -> list[UsbDevice]:
     """
     Retrieve a list of connected USB devices that can be shared over usbip.

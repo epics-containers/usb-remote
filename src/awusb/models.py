@@ -21,6 +21,7 @@ class AttachRequest(BaseModel):
     bus: str | None = None
     serial: str | None = None
     desc: str | None = None
+    first: bool = False
 
 
 class ListResponse(BaseModel):

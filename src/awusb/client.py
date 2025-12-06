@@ -63,7 +63,6 @@ def attach_device(
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.connect((server_host, server_port))
 
-        print(f"Request: {args}")
         response = send_request(sock, args)
 
         if isinstance(response, ErrorResponse):
