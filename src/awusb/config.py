@@ -30,9 +30,7 @@ def discover_config_path() -> Path | None:
             logger.debug(f"Using config from AWUSB_CONFIG: {env_path}")
             return env_path
         else:
-            logger.warning(
-                f"AWUSB_CONFIG points to non-existent file: {env_path}"
-            )
+            logger.warning(f"AWUSB_CONFIG points to non-existent file: {env_path}")
 
     # 2. Check local directory
     local_config = Path.cwd() / ".awusb.config"
