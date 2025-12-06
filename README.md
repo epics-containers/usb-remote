@@ -31,8 +31,9 @@ See `awusb.config.example` for a sample configuration file.
 - **list**: Without `--host`, queries all configured servers and displays devices grouped by server
 - **attach/detach**: Without `--host`, scans all servers to find a matching device
   - Fails if no match is found across all servers
-  - Fails if multiple matches are found across different servers
+  - Fails if multiple matches are found across different servers (unless `--first` is used)
   - Succeeds if exactly one match is found (reports which server it was found on)
+  - With `--first` flag: Attaches the first matching device found, even if multiple servers have matching devices
 - **--host flag**: When specified, only queries that specific server (ignores config file)
 
 ### Examples
@@ -44,9 +45,15 @@ awusb list
 # List devices on a specific server
 awusb list --host raspberrypi
 
-# Attach a device (scans all servers)
+# Attach a device (scans all servers, fails if multiple matches)
 awusb attach --desc "Camera"
+
+# Attach first matching device across servers
+awusb attach --desc "Camera" --first
 
 # Attach a device from a specific server
 awusb attach --desc "Camera" --host 192.168.1.100
+
+# Detach with first match (if same device attached from multiple servers)
+awusb detach --desc "Camera" --first
 ```
