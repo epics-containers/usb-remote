@@ -24,8 +24,8 @@ class UsbDevice(BaseModel):
     def __str__(self):
         ser = f"\n  serial={self.serial}" if self.serial else ""
         return (
-            f"id={self.vendor_id}:{self.product_id} bus={self.bus_id:13}\n"
-            f"  desc={self.description}{ser}"
+            f"- {self.description}{ser}\n"
+            f"  id={self.vendor_id}:{self.product_id} bus={self.bus_id:13}"
         )
 
     @staticmethod
@@ -132,6 +132,8 @@ def get_device(
         if bus and device.bus_id != bus:
             continue
         if desc and desc.lower() not in device.description.lower():
+            continue
+        if serial and device.serial != serial:
             continue
         filtered_devices.append(device)
 
