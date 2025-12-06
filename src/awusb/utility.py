@@ -24,9 +24,15 @@ def run_command(
     Raises:
         CalledProcessError: If check=True and the command returns non-zero
     """
-    return subprocess.run(
-        command,
-        capture_output=capture_output,
-        text=text,
-        check=check,
-    )
+    try:
+        return subprocess.run(
+            command,
+            capture_output=capture_output,
+            text=text,
+            check=check,
+        )
+    except subprocess.CalledProcessError as e:
+        print(f"\nCommand '{' '.join(command)}' failed with exit code {e.returncode}")
+        print(f"Stdout: {e.stdout}")
+        print(f"Stderr: {e.stderr}")
+        raise RuntimeError(e.stderr) from e

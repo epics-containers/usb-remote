@@ -2,14 +2,15 @@ import socket
 
 from pydantic import TypeAdapter
 
-from awusb.models import (
+from .models import (
     AttachRequest,
     AttachResponse,
     ErrorResponse,
     ListRequest,
     ListResponse,
 )
-from awusb.usbdevice import UsbDevice
+from .usbdevice import UsbDevice
+from .utility import run_command
 
 
 def send_request(sock, request):
@@ -67,5 +68,9 @@ def attach_device(
 
         if isinstance(response, ErrorResponse):
             raise RuntimeError(f"Server error: {response.message}")
+
+        run_command(
+            ["sudo", "usbip", "attach", "-r", server_host, "-b", response.data.bus_id]
+        )
 
         return response.status == "success"

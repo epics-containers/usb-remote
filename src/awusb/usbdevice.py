@@ -114,6 +114,7 @@ def get_device(
         id: The device ID in the format "vendor:product" (e.g., "0bda:5400")
         bus: The bus ID string (e.g., "1-2.3.4")
         desc: A substring to match in the device description
+        serial: The serial number to match
         first: Whether to return the first matching device
     Returns:
         A UsbDevice instance matching the criteria.

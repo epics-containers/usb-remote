@@ -35,6 +35,7 @@ class AttachResponse(BaseModel):
     """Response to attach request."""
 
     status: Literal["success", "failure"]
+    data: UsbDevice
 
 
 class ErrorResponse(BaseModel):

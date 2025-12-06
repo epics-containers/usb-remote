@@ -11,6 +11,7 @@ from .models import (
     ListResponse,
 )
 from .usbdevice import UsbDevice, get_device, get_devices
+from .utility import run_command
 
 
 class CommandServer:
@@ -22,18 +23,19 @@ class CommandServer:
 
     def handle_list(self) -> list[UsbDevice]:
         """Handle the 'list' command."""
-        # TODO: Implement list logic
         result = get_devices()
         return result
 
     def handle_attach(
         self,
         args: AttachRequest,
-    ) -> bool:
+    ) -> UsbDevice:
         """Handle the 'attach' command with optional arguments."""
         device = get_device(**args.model_dump(exclude={"command"}))
-        print(f"Attaching device: {device}")
-        return True
+        print(f"binding:\n{device}")
+        run_command(["sudo", "usbip", "unbind", "-b", device.bus_id], check=False)
+        run_command(["sudo", "usbip", "bind", "-b", device.bus_id])
+        return device
 
     def _send_response(
         self,
@@ -76,7 +78,7 @@ class CommandServer:
             elif isinstance(request, AttachRequest):
                 print(f"Attach from : {address}, args: {request}")
                 result = self.handle_attach(args=request)
-                response = AttachResponse(status="success" if result else "failure")
+                response = AttachResponse(status="success", data=result)
                 self._send_response(client_socket, response)
 
         except Exception as e:
