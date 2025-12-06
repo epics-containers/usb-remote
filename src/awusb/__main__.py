@@ -1,4 +1,4 @@
-"""Interface for ``python -m awusb_client``."""
+"""Interface for ``python -m awusb``."""
 
 from collections.abc import Sequence
 

@@ -35,7 +35,7 @@ dev = [
 ]
 
 [project.scripts]
-awusb = "awusb_client.__main__:main"
+awusb = "awusb.__main__:main"
 
 [project.urls]
 GitHub = "https://github.com/epics-containers/awusb"
@@ -45,7 +45,7 @@ email = "giles.knap@diamond.ac.uk"
 name = "Giles Knap"
 
 [tool.setuptools_scm]
-version_file = "src/awusb_client/_version.py"
+version_file = "src/awusb/_version.py"
 
 [tool.pyright]
 typeCheckingMode = "standard"
@@ -63,7 +63,7 @@ testpaths = "docs src tests"
 
 [tool.coverage.run]
 patch = ["subprocess"]
-data_file = "/tmp/awusb_client.coverage"
+data_file = "/tmp/awusb.coverage"
 
 [tool.coverage.paths]
 # Tests are run from installed location, map back to the src directory
@@ -110,7 +110,7 @@ description = "Run tests with coverage"
 commands = [
     [
         "pytest",
-        "--cov=awusb_client",
+        "--cov=awusb",
         "--cov-report",
         "term",
         "--cov-report",

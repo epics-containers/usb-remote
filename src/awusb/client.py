@@ -2,14 +2,14 @@ import socket
 
 from pydantic import TypeAdapter
 
-from awusb_client.models import (
+from awusb.models import (
     AttachRequest,
     AttachResponse,
     ErrorResponse,
     ListRequest,
     ListResponse,
 )
-from awusb_client.usbdevice import UsbDevice
+from awusb.usbdevice import UsbDevice
 
 
 def send_request(sock, request):
