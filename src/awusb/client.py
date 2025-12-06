@@ -13,15 +13,34 @@ from .usbdevice import UsbDevice
 from .utility import run_command
 
 
-def send_request(sock, request):
-    sock.sendall(request.model_dump_json().encode("utf-8"))
+def send_request(request, server_host="localhost", server_port=5000):
+    """
+    Send a request to the server and return the response.
 
-    response = sock.recv(4096).decode("utf-8")
-    # Parse response using TypeAdapter to handle union types
-    response_adapter = TypeAdapter(ListResponse | AttachResponse | ErrorResponse)
-    decoded = response_adapter.validate_json(response)
+    Args:
+        request: The request object to send
+        server_host: Server hostname or IP address
+        server_port: Server port number
 
-    return decoded
+    Returns:
+        The response object from the server
+
+    Raises:
+        RuntimeError: If the server returns an error response
+    """
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.connect((server_host, server_port))
+        sock.sendall(request.model_dump_json().encode("utf-8"))
+
+        response = sock.recv(4096).decode("utf-8")
+        # Parse response using TypeAdapter to handle union types
+        response_adapter = TypeAdapter(ListResponse | AttachResponse | ErrorResponse)
+        decoded = response_adapter.validate_json(response)
+
+        if isinstance(decoded, ErrorResponse):
+            raise RuntimeError(f"Server error: {decoded.message}")
+
+        return decoded
 
 
 def list_devices(server_host="localhost", server_port=5000) -> list[UsbDevice]:
@@ -35,16 +54,9 @@ def list_devices(server_host="localhost", server_port=5000) -> list[UsbDevice]:
     Returns:
         List of UsbDevice instances
     """
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.connect((server_host, server_port))
-
-        request = ListRequest()
-        response = send_request(sock, request)
-
-        if isinstance(response, ErrorResponse):
-            raise RuntimeError(f"Server error: {response.message}")
-
-        return response.data
+    request = ListRequest()
+    response = send_request(request, server_host, server_port)
+    return response.data
 
 
 def attach_detach_device(
@@ -61,25 +73,19 @@ def attach_detach_device(
     Returns:
         The device that was attached, or detached
     """
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.connect((server_host, server_port))
+    response = send_request(args, server_host, server_port)
 
-        response = send_request(sock, args)
+    if not detach:
+        run_command(
+            [
+                "sudo",
+                "usbip",
+                "attach",
+                "-r",
+                server_host,
+                "-b",
+                response.data.bus_id,
+            ]
+        )
 
-        if isinstance(response, ErrorResponse):
-            raise RuntimeError(f"Server error: {response.message}")
-
-        if not detach:
-            run_command(
-                [
-                    "sudo",
-                    "usbip",
-                    "attach",
-                    "-r",
-                    server_host,
-                    "-b",
-                    response.data.bus_id,
-                ]
-            )
-
-        return response.data
+    return response.data
