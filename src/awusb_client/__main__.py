@@ -4,7 +4,7 @@ from argparse import ArgumentParser
 from collections.abc import Sequence
 
 from . import __version__
-from .query import get_devices
+from .usbdevice import get_devices
 
 __all__ = ["main"]
 
@@ -23,7 +23,7 @@ def main(args: Sequence[str] | None = None) -> None:
     get_devices_list = get_devices()
     print("Local shareable USB devices:")
     for device in get_devices_list:
-        print(f"- {device}\n  {device.details}")
+        print(f"- {device}")
 
 
 if __name__ == "__main__":
