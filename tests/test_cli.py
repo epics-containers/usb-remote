@@ -315,6 +315,37 @@ class TestMultiServerOperations:
             assert result.exit_code == 0
             assert "server1" in result.stdout
 
+    def test_attach_multi_server_multiple_matches_fails(self):
+        """Test attach fails with multiple matches without --first."""
+        servers = ["server1", "server2"]
+        with (
+            patch("awusb.__main__.get_servers", return_value=servers),
+            patch(
+                "awusb.__main__.attach_detach_device",
+                side_effect=RuntimeError(
+                    "Multiple devices matched across servers: Test Device on server1, "
+                    "Test Device on server2. Use --first to attach the first match."
+                ),
+            ),
+        ):
+            result = runner.invoke(app, ["attach", "--desc", "Camera"])
+            assert result.exit_code != 0
+            assert result.exception is not None
+
+    def test_attach_multi_server_multiple_matches_with_first(self, mock_usb_devices):
+        """Test attach succeeds with multiple matches when --first is used."""
+        servers = ["server1", "server2"]
+        with (
+            patch("awusb.__main__.get_servers", return_value=servers),
+            patch(
+                "awusb.__main__.attach_detach_device",
+                return_value=(mock_usb_devices[0], "server1"),
+            ),
+        ):
+            result = runner.invoke(app, ["attach", "--desc", "Camera", "--first"])
+            assert result.exit_code == 0
+            assert "server1" in result.stdout
+
     def test_attach_multi_server_no_match(self):
         """Test attach across multiple servers with no match."""
         servers = ["server1", "server2"]

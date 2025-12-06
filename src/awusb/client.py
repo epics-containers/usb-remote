@@ -146,24 +146,6 @@ def attach_detach_device(
         try:
             logger.debug(f"Trying server {server}")
             response = send_request(args, server, server_port)
-
-            if not detach:
-                logger.info(f"Attaching device {response.data.bus_id} to local system")
-                run_command(
-                    [
-                        "sudo",
-                        "usbip",
-                        "attach",
-                        "-r",
-                        server,
-                        "-b",
-                        response.data.bus_id,
-                    ]
-                )
-                logger.info(f"Device attached: {response.data.description}")
-            else:
-                logger.info(f"Device detached: {response.data.description}")
-
             matches.append((response.data, server))
             logger.debug(f"Match found on {server}: {response.data.description}")
         except RuntimeError as e:
@@ -180,12 +162,33 @@ def attach_detach_device(
         logger.error(msg)
         raise RuntimeError(msg)
 
-    if len(matches) > 1:
+    if len(matches) > 1 and not args.first:
         server_list = ", ".join(f"{dev.description} on {srv}" for dev, srv in matches)
-        msg = f"Multiple devices matched across servers: {server_list}"
+        msg = (
+            f"Multiple devices matched across servers: {server_list}. "
+            "Use --first to attach the first match."
+        )
         logger.error(msg)
         raise RuntimeError(msg)
 
     device, server = matches[0]
+
+    if not detach:
+        logger.info(f"Attaching device {device.bus_id} from {server} to local system")
+        run_command(
+            [
+                "sudo",
+                "usbip",
+                "attach",
+                "-r",
+                server,
+                "-b",
+                device.bus_id,
+            ]
+        )
+        logger.info(f"Device attached: {device.description}")
+    else:
+        logger.info(f"Device detached: {device.description}")
+
     logger.info(f"Device {action}ed on server {server}: {device.description}")
     return device, server
