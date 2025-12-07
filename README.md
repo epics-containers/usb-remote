@@ -154,4 +154,3 @@ sudo awusb uninstall-service --system
 - **Security hardening**: Runs with limited privileges
 - **Logging**: All output is captured by systemd journal
 - **Boot persistence**: Can be enabled to start automatically
-

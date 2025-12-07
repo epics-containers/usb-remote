@@ -39,7 +39,6 @@ def get_systemd_service_content(user: str | None = None) -> str:
         String content of the systemd service file.
     """
     import getpass
-    import os
 
     if user is None:
         user = getpass.getuser()
@@ -85,22 +84,22 @@ def install_systemd_service(user: str | None = None, system_wide: bool = False) 
     # Create directory if it doesn't exist
     try:
         service_dir.mkdir(parents=True, exist_ok=True)
-    except PermissionError:
+    except PermissionError as e:
         if system_wide:
             raise RuntimeError(
                 "Permission denied. Run with sudo for system-wide installation."
-            )
+            ) from e
         raise
 
     # Write service file
     try:
         service_path.write_text(service_content)
         logger.info(f"Service file written to {service_path}")
-    except PermissionError:
+    except PermissionError as e:
         if system_wide:
             raise RuntimeError(
                 "Permission denied. Run with sudo for system-wide installation."
-            )
+            ) from e
         raise
 
     # Reload systemd
@@ -126,7 +125,7 @@ def install_systemd_service(user: str | None = None, system_wide: bool = False) 
             logger.info(f"Start with: systemctl --user start {service_name}")
             logger.info(f"Status: systemctl --user status {service_name}")
     except subprocess.CalledProcessError as e:
-        raise RuntimeError(f"Failed to reload systemd: {e.stderr.decode()}")
+        raise RuntimeError(f"Failed to reload systemd: {e.stderr.decode()}") from e
 
 
 def uninstall_systemd_service(system_wide: bool = False) -> None:
@@ -134,7 +133,7 @@ def uninstall_systemd_service(system_wide: bool = False) -> None:
     Uninstall the awusb systemd service.
 
     Args:
-        system_wide: If True, uninstall system service. If False, uninstall user service.
+        system_wide: True for system service. False for user service.
 
     Raises:
         RuntimeError: If uninstallation fails.
@@ -183,9 +182,11 @@ def uninstall_systemd_service(system_wide: bool = False) -> None:
     try:
         service_path.unlink()
         logger.info(f"Removed service file: {service_path}")
-    except PermissionError:
+    except PermissionError as e:
         if system_wide:
-            raise RuntimeError("Permission denied. Run with sudo for system service.")
+            raise RuntimeError(
+                "Permission denied. Run with sudo for system service."
+            ) from e
         raise
 
     # Reload systemd
@@ -202,4 +203,4 @@ def uninstall_systemd_service(system_wide: bool = False) -> None:
             )
         logger.info("Service uninstalled successfully!")
     except subprocess.CalledProcessError as e:
-        raise RuntimeError(f"Failed to reload systemd: {e.stderr.decode()}")
+        raise RuntimeError(f"Failed to reload systemd: {e.stderr.decode()}") from e
