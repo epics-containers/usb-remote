@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 def version_callback(value: bool) -> None:
-    """Print version and exit."""
+    """Output version and exit."""
     if value:
         typer.echo(f"awusb {__version__}")
         raise typer.Exit()
@@ -93,7 +93,7 @@ def list_command(
         logger.debug("Listing local USB devices")
         devices = get_devices()
         for device in devices:
-            print(device)
+            typer.echo(device)
     else:
         if host:
             servers = [host]
@@ -103,15 +103,17 @@ def list_command(
             logger.warning("No servers configured, defaulting to localhost")
             servers = ["localhost"]
 
+        logger.debug(f"Listing remote USB devices on hosts: {servers}")
+
         results = list_devices(server_hosts=servers, server_port=5055)
 
         for server, devices in results.items():
-            print(f"\n=== {server} ===")
+            typer.echo(f"\n=== {server} ===")
             if devices:
                 for device in devices:
-                    print(device)
+                    typer.echo(device)
             else:
-                print("No devices or server unavailable")
+                typer.echo("No devices or server unavailable")
 
 
 def attach_detach(detach: bool = False, **kwargs) -> tuple[UsbDevice, str | None]:

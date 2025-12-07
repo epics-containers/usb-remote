@@ -98,15 +98,6 @@ def list_devices(
             list of UsbDevice instances
     """
 
-    # Handle single server (backward compatibility)
-    if isinstance(server_hosts, str):
-        logger.info(f"Requesting device list from {server_hosts}:{server_port}")
-        request = ListRequest()
-        response = send_request(request, server_hosts, server_port, timeout=timeout)
-        logger.info(f"Retrieved {len(response.data)} devices")
-        return response.data
-
-    # Handle multiple servers
     logger.info(f"Querying {len(server_hosts)} servers for device lists")
     results = {}
 
