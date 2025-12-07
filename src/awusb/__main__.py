@@ -2,14 +2,19 @@
 
 import logging
 from collections.abc import Sequence
-from pathlib import Path
 from typing import cast
 
 import typer
 
 from . import __version__
 from .client import attach_detach_device, list_devices
-from .config import get_servers
+from .config import (
+    DEFAULT_CONFIG_PATH,
+    discover_config_path,
+    get_config,
+    get_servers,
+    save_servers,
+)
 from .models import AttachRequest
 from .server import CommandServer
 from .service import install_systemd_service, uninstall_systemd_service
@@ -18,18 +23,31 @@ from .usbdevice import UsbDevice, get_devices
 __all__ = ["main"]
 
 app = typer.Typer()
+config_app = typer.Typer()
+app.add_typer(config_app, name="config", help="Manage configuration")
 logger = logging.getLogger(__name__)
 
 
 def version_callback(value: bool) -> None:
-    """Print version and exit."""
+    """Output version and exit."""
     if value:
         typer.echo(f"awusb {__version__}")
         raise typer.Exit()
 
 
+def setup_logging(log_level: int) -> None:
+    """Setup logging configuration."""
+    logging.basicConfig(
+        level=log_level,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        force=True,
+    )
+
+
 @app.callback()
 def common_options(
+    ctx: typer.Context,
     version: bool = typer.Option(
         False,
         "--version",
@@ -37,23 +55,29 @@ def common_options(
         is_eager=True,
         help="Show version and exit",
     ),
+    debug: bool = typer.Option(False, "--debug", help="Enable debug logging"),
 ) -> None:
     """Common options for all commands."""
-    pass
+    # Configure debug logging, all commands
+    if debug:
+        setup_logging(logging.DEBUG)
+
+    # Store debug flag in context for commands that need it
+    ctx.ensure_object(dict)
+    ctx.obj["debug"] = debug
 
 
 @app.command()
 def server(
-    debug: bool = typer.Option(False, "--debug", "-d", help="Enable debug logging"),
+    ctx: typer.Context,
 ) -> None:
     """Start the USB sharing server."""
-    # Configure logging
+    debug = ctx.obj.get("debug", False)
     log_level = logging.DEBUG if debug else logging.INFO
-    logging.basicConfig(
-        level=log_level,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
+
+    # Set log level for non-debug mode (debug mode already configured in callback)
+    if not debug:
+        setup_logging(logging.INFO)
 
     logger.info(f"Starting server with log level: {logging.getLevelName(log_level)}")
     server = CommandServer()
@@ -71,86 +95,60 @@ def list_command(
     host: str | None = typer.Option(
         None, "--host", "-H", help="Server hostname or IP address"
     ),
-    config: Path | None = typer.Option(
-        None, "--config", "-c", help="Path to config file"
-    ),
-    debug: bool = typer.Option(False, "--debug", help="Enable debug logging"),
 ) -> None:
-    """List the available USB devices from the server(s)."""
-    if debug:
-        logging.basicConfig(
-            level=logging.DEBUG,
-            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        )
-
+    """List the available USB devices from configured server(s)."""
     if local:
         logger.debug("Listing local USB devices")
         devices = get_devices()
         for device in devices:
-            print(device)
-    elif host:
-        # Single server specified
-        logger.debug(f"Listing devices from {host}")
-        devices = cast(
-            list[UsbDevice], list_devices(server_hosts=host, server_port=5055)
-        )
-        for device in devices:
-            print(device)
+            typer.echo(device)
     else:
-        # Query all servers from config
-        servers = get_servers(config)
+        if host:
+            servers = [host]
+        else:
+            servers = get_servers()
         if not servers:
             logger.warning("No servers configured, defaulting to localhost")
             servers = ["localhost"]
 
-        results = cast(
-            dict[str, list[UsbDevice]],
-            list_devices(server_hosts=servers, server_port=5055),
-        )
+        logger.debug(f"Listing remote USB devices on hosts: {servers}")
+
+        results = list_devices(server_hosts=servers, server_port=5055)
+
         for server, devices in results.items():
-            print(f"\n=== {server} ===")
+            typer.echo(f"\n=== {server} ===")
             if devices:
                 for device in devices:
-                    print(device)
+                    typer.echo(device)
             else:
-                print("No devices or server unavailable")
+                typer.echo("No devices or server unavailable")
 
 
 def attach_detach(detach: bool = False, **kwargs) -> tuple[UsbDevice, str | None]:
-    """Attach or detach a USB device from the server.
+    """Attach or detach a USB device from a server.
 
     Returns:
         Tuple of (device, server) where server is None if --host was specified
     """
     args = AttachRequest(detach=detach, **kwargs)
     host = kwargs.get("host")
-    config = kwargs.get("config")
 
     if host:
-        # Single server specified
-        result = attach_detach_device(
-            args=args,
-            server_hosts=host,
-            server_port=5055,
-            detach=detach,
-        )
-        device = cast(UsbDevice, result)
-        return device, None
+        servers = [host]
     else:
-        # Scan all servers from config
-        servers = get_servers(config)
-        if not servers:
-            logger.warning("No servers configured, defaulting to localhost")
-            servers = ["localhost"]
+        servers = get_servers()
+    if not servers:
+        logger.warning("No servers configured, defaulting to localhost")
+        servers = ["localhost"]
 
-        result = attach_detach_device(
-            args=args,
-            server_hosts=servers,
-            server_port=5055,
-            detach=detach,
-        )
-        device, server = cast(tuple[UsbDevice, str], result)
-        return device, server
+    result = attach_detach_device(
+        args=args,
+        server_hosts=servers,
+        server_port=5055,
+        detach=detach,
+    )
+    device, server = cast(tuple[UsbDevice, str], result)
+    return device, server
 
 
 @app.command()
@@ -171,18 +169,8 @@ def attach(
     first: bool = typer.Option(
         False, "--first", "-f", help="Attach the first match if multiple found"
     ),
-    config: Path | None = typer.Option(
-        None, "--config", "-c", help="Path to config file"
-    ),
-    debug: bool = typer.Option(False, "--debug", help="Enable debug logging"),
 ) -> None:
-    """Attach a USB device from the server."""
-    if debug:
-        logging.basicConfig(
-            level=logging.DEBUG,
-            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        )
-
+    """Attach a USB device from a server."""
     result, server = attach_detach(
         False,
         id=id,
@@ -191,7 +179,6 @@ def attach(
         first=first,
         serial=serial,
         host=host,
-        config=config,
     )
     if server:
         typer.echo(f"Attached to device on {server}:\n{result}")
@@ -217,18 +204,8 @@ def detach(
     first: bool = typer.Option(
         False, "--first", "-f", help="Attach the first match if multiple found"
     ),
-    config: Path | None = typer.Option(
-        None, "--config", "-c", help="Path to config file"
-    ),
-    debug: bool = typer.Option(False, "--debug", help="Enable debug logging"),
 ) -> None:
-    """Detach a USB device from the server."""
-    if debug:
-        logging.basicConfig(
-            level=logging.DEBUG,
-            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        )
-
+    """Detach a USB device from a server."""
     result, server = attach_detach(
         True,
         id=id,
@@ -237,7 +214,6 @@ def detach(
         first=first,
         serial=serial,
         host=host,
-        config=config,
     )
     if server:
         typer.echo(f"Detached from device on {server}:\n{result}")
@@ -264,7 +240,7 @@ def install_service(
         install_systemd_service(user=user, system_wide=system)
     except RuntimeError as e:
         typer.echo(f"Installation failed: {e}", err=True)
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 @app.command()
@@ -280,7 +256,89 @@ def uninstall_service(
         uninstall_systemd_service(system_wide=system)
     except RuntimeError as e:
         typer.echo(f"Uninstallation failed: {e}", err=True)
+        raise typer.Exit(1) from e
+
+
+@config_app.command(name="show")
+def config_show() -> None:
+    """Show current configuration."""
+    config_path = discover_config_path()
+
+    if config_path is None:
+        typer.echo("No configuration file found.")
+        typer.echo(f"Default location: {DEFAULT_CONFIG_PATH}")
+        typer.echo("\nDefault configuration:")
+    else:
+        typer.echo(f"Configuration file: {config_path}")
+        typer.echo()
+
+    config = get_config()
+
+    typer.echo(f"Servers ({len(config.servers)}):")
+    if config.servers:
+        for server in config.servers:
+            typer.echo(f"  - {server}")
+    else:
+        typer.echo("  (none)")
+
+    typer.echo(f"\nTimeout: {config.timeout}s")
+
+
+@config_app.command(name="add-server")
+def config_add_server(
+    server: str = typer.Argument(..., help="Server hostname or IP address"),
+) -> None:
+    """Add a server to the configuration."""
+    config = get_config()
+
+    if server in config.servers:
+        typer.echo(f"Server '{server}' is already in the configuration.", err=True)
         raise typer.Exit(1)
+
+    config.servers.append(server)
+    save_servers(config.servers)
+
+    config_path = discover_config_path() or DEFAULT_CONFIG_PATH
+    typer.echo(f"Added server '{server}' to {config_path}")
+
+
+@config_app.command(name="rm-server")
+def config_remove_server(
+    server: str = typer.Argument(..., help="Server hostname or IP address"),
+) -> None:
+    """Remove a server from the configuration."""
+    config_path = discover_config_path()
+
+    if config_path is None:
+        typer.echo("No configuration file found.", err=True)
+        raise typer.Exit(1)
+
+    config = get_config()
+
+    if server not in config.servers:
+        typer.echo(f"Server '{server}' is not in the configuration.", err=True)
+        raise typer.Exit(1)
+
+    config.servers.remove(server)
+    save_servers(config.servers)
+    typer.echo(f"Removed server '{server}' from {config_path}")
+
+
+@config_app.command(name="set-timeout")
+def config_set_timeout(
+    timeout: float = typer.Argument(..., help="Connection timeout in seconds"),
+) -> None:
+    """Set the connection timeout."""
+    if timeout <= 0:
+        typer.echo("Timeout must be greater than 0.", err=True)
+        raise typer.Exit(1)
+
+    config = get_config()
+    config.timeout = timeout
+    config.to_file()
+
+    config_path = discover_config_path() or DEFAULT_CONFIG_PATH
+    typer.echo(f"Set timeout to {timeout}s in {config_path}")
 
 
 def main(args: Sequence[str] | None = None) -> None:

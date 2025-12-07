@@ -5,11 +5,71 @@ import os
 from pathlib import Path
 
 import yaml
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_CONFIG_PATH = Path.home() / ".config" / "awusb" / "awusb.config"
 DEFAULT_TIMEOUT = 5.0
+
+
+class AwusbConfig(BaseModel):
+    """Pydantic model for awusb configuration."""
+
+    servers: list[str] = Field(default_factory=list)
+    timeout: float = Field(default=DEFAULT_TIMEOUT, gt=0)
+
+    @classmethod
+    def from_file(cls, config_path: Path) -> "AwusbConfig":
+        """
+        Load configuration from a YAML file.
+
+        Args:
+            config_path: Path to the config file.
+
+        Returns:
+            AwusbConfig instance with values from file or defaults.
+        """
+        try:
+            with open(config_path) as f:
+                data = yaml.safe_load(f)
+
+            if data is None:
+                logger.debug(f"Empty config file: {config_path}")
+                return cls()
+
+            logger.debug(f"Loaded config from {config_path}")
+            return cls(**data)
+
+        except FileNotFoundError:
+            logger.debug(f"Config file not found: {config_path}")
+            return cls()
+        except Exception as e:
+            logger.error(f"Error reading config file {config_path}: {e}")
+            return cls()
+
+    def to_file(self) -> None:
+        """
+        Save configuration to a YAML file.
+
+        Args:
+            config_path: Path to the config file.
+        """
+        config_path = discover_config_path() or DEFAULT_CONFIG_PATH
+        # Create directory if it doesn't exist
+        config_path.parent.mkdir(parents=True, exist_ok=True)
+
+        try:
+            with open(config_path, "w") as f:
+                yaml.safe_dump(
+                    self.model_dump(exclude_defaults=False),
+                    f,
+                    default_flow_style=False,
+                )
+            logger.debug(f"Saved config to {config_path}")
+        except Exception as e:
+            logger.error(f"Error writing config file {config_path}: {e}")
+            raise
 
 
 def discover_config_path() -> Path | None:
@@ -47,87 +107,59 @@ def discover_config_path() -> Path | None:
     return None
 
 
+def get_config() -> AwusbConfig:
+    """
+    Load configuration from file.
+
+    Args:
+        config_path: Path to config file. If None, discovers using:
+            1. AWUSB_CONFIG environment variable
+            2. .awusb.config in current directory
+            3. ~/.config/awusb/awusb.config (default)
+
+    Returns:
+        AwusbConfig instance with values from file or defaults.
+    """
+    config_path = discover_config_path()
+
+    if config_path is None:
+        logger.debug("No config file found, using defaults")
+        return AwusbConfig()
+
+    return AwusbConfig.from_file(config_path)
+
+
 def get_servers(config_path: Path | None = None) -> list[str]:
     """
     Read list of server addresses from config file.
 
     Args:
-        config_path: Path to config file. If None, discovers using:
-            1. AWUSB_CONFIG environment variable
-            2. .awusb.config in current directory
-            3. ~/.config/awusb/awusb.config (default)
+        config_path: Path to config file. If None, discovers automatically.
 
     Returns:
         List of server hostnames/IPs. Returns empty list if file doesn't exist.
     """
-    if config_path is None:
-        config_path = discover_config_path()
-
-    if config_path is None:
-        logger.debug("No config file found")
-        return []
-
-    try:
-        with open(config_path) as f:
-            config = yaml.safe_load(f)
-
-        if config is None:
-            logger.debug(f"Empty config file: {config_path}")
-            return []
-
-        servers = config.get("servers", [])
-        if not isinstance(servers, list):
-            logger.warning(f"Invalid servers config in {config_path}, expected list")
-            return []
-
-        logger.debug(f"Loaded {len(servers)} servers from config")
-        return servers
-
-    except Exception as e:
-        logger.error(f"Error reading config file {config_path}: {e}")
-        return []
+    config = get_config()
+    logger.debug(f"Loaded {len(config.servers)} servers from config")
+    return config.servers
 
 
-def get_timeout(config_path: Path | None = None) -> float:
+def get_timeout() -> float:
     """
     Read connection timeout from config file.
 
     Args:
-        config_path: Path to config file. If None, discovers using:
-            1. AWUSB_CONFIG environment variable
-            2. .awusb.config in current directory
-            3. ~/.config/awusb/awusb.config (default)
+        config_path: Path to config file. If None, discovers automatically.
 
     Returns:
         Timeout in seconds. Returns default if not configured.
     """
-    if config_path is None:
-        config_path = discover_config_path()
-
-    if config_path is None:
-        return DEFAULT_TIMEOUT
-
-    try:
-        with open(config_path) as f:
-            config = yaml.safe_load(f)
-
-        if config is None:
-            return DEFAULT_TIMEOUT
-
-        timeout = config.get("timeout", DEFAULT_TIMEOUT)
-        if not isinstance(timeout, (int, float)) or timeout <= 0:
-            logger.warning(f"Invalid timeout config in {config_path}, using default")
-            return DEFAULT_TIMEOUT
-
-        logger.debug(f"Using timeout: {timeout}s")
-        return float(timeout)
-
-    except Exception as e:
-        logger.error(f"Error reading config file {config_path}: {e}")
-        return DEFAULT_TIMEOUT
+    config = get_config()
+    logger.debug(f"Using timeout: {config.timeout}s")
+    return config.timeout
 
 
-def save_servers(servers: list[str], config_path: Path | None = None) -> None:
+def save_servers(servers: list[str]) -> None:
     """
     Save list of server addresses to config file.
 
@@ -135,18 +167,7 @@ def save_servers(servers: list[str], config_path: Path | None = None) -> None:
         servers: List of server hostnames/IPs
         config_path: Path to config file. If None, uses default location.
     """
-    if config_path is None:
-        config_path = DEFAULT_CONFIG_PATH
-
-    # Create directory if it doesn't exist
-    config_path.parent.mkdir(parents=True, exist_ok=True)
-
-    config = {"servers": servers}
-
-    try:
-        with open(config_path, "w") as f:
-            yaml.safe_dump(config, f, default_flow_style=False)
-        logger.debug(f"Saved {len(servers)} servers to {config_path}")
-    except Exception as e:
-        logger.error(f"Error writing config file {config_path}: {e}")
-        raise
+    # Load existing config to preserve other settings
+    config = get_config()
+    config.servers = servers
+    config.to_file()

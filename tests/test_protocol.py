@@ -246,8 +246,10 @@ class TestClientServerIntegration:
 
     def test_list_devices_integration(self, server, server_port, mock_usb_devices):
         """Test full list devices flow from client to server."""
-        devices = list_devices(server_hosts="127.0.0.1", server_port=server_port)
+        result = list_devices(server_hosts=["127.0.0.1"], server_port=server_port)
 
+        assert "127.0.0.1" in result
+        devices = result["127.0.0.1"]
         assert len(devices) == 2
         assert devices[0].bus_id == "1-1.1"
         assert devices[0].vendor_id == "1234"
@@ -257,22 +259,24 @@ class TestClientServerIntegration:
         """Test full attach device flow from client to server."""
         with patch("awusb.client.run_command"):
             request = AttachRequest(id="1234:5678")
-            device = attach_detach_device(
-                request, server_hosts="127.0.0.1", server_port=server_port
+            device, server_name = attach_detach_device(
+                request, server_hosts=["127.0.0.1"], server_port=server_port
             )
 
             assert isinstance(device, UsbDevice)
             assert device.bus_id == "1-1.1"
+            assert server_name == "127.0.0.1"
 
     def test_detach_device_integration(self, server, server_port, mock_usb_devices):
         """Test full detach device flow from client to server."""
         request = AttachRequest(id="1234:5678", detach=True)
-        device = attach_detach_device(
-            request, server_hosts="127.0.0.1", server_port=server_port, detach=True
+        device, server_name = attach_detach_device(
+            request, server_hosts=["127.0.0.1"], server_port=server_port, detach=True
         )
 
         assert isinstance(device, UsbDevice)
         assert device.bus_id == "1-1.1"
+        assert server_name == "127.0.0.1"
 
     def test_server_handles_empty_request(self, server, server_port):
         """Test that server handles empty requests gracefully."""
@@ -317,8 +321,10 @@ class TestClientServerIntegration:
         """Test that client properly handles error responses."""
         # Override the mock to raise an exception
         with patch("awusb.server.get_devices", side_effect=Exception("Test error")):
-            with pytest.raises(RuntimeError, match="Server error"):
-                list_devices(server_hosts="127.0.0.1", server_port=server_port)
+            result = list_devices(server_hosts=["127.0.0.1"], server_port=server_port)
+            # In multi-server mode, errors are caught and the server returns empty list
+            assert "127.0.0.1" in result
+            assert result["127.0.0.1"] == []
 
 
 class TestProtocolRobustness:

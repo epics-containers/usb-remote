@@ -21,12 +21,12 @@ DEFAULT_TIMEOUT = 5.0
 
 
 def send_request(
-    request,
-    server_host="localhost",
-    server_port=5055,
-    raise_on_error=True,
-    timeout=DEFAULT_TIMEOUT,
-):
+    request: ListRequest | AttachRequest,
+    server_host: str = "localhost",
+    server_port: int = 5055,
+    raise_on_error: bool = True,
+    timeout: float | None = DEFAULT_TIMEOUT,
+) -> ListResponse | AttachResponse:
     """
     Send a request to the server and return the response.
 
@@ -47,6 +47,10 @@ def send_request(
         OSError: If connection fails
     """
     logger.debug(f"Connecting to server at {server_host}:{server_port}")
+
+    if timeout is None:
+        timeout = get_timeout()
+
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.settimeout(timeout)
@@ -76,10 +80,10 @@ def send_request(
 
 
 def list_devices(
-    server_hosts: list[str] | str = "localhost",
-    server_port=5055,
+    server_hosts: list[str],
+    server_port: int = 5055,
     timeout: float | None = None,
-) -> dict[str, list[UsbDevice]] | list[UsbDevice]:
+) -> dict[str, list[UsbDevice]]:
     """
     Request list of available USB devices from server(s).
 
@@ -93,18 +97,7 @@ def list_devices(
         If server_hosts is a list: Dictionary mapping server name to
             list of UsbDevice instances
     """
-    if timeout is None:
-        timeout = get_timeout()
 
-    # Handle single server (backward compatibility)
-    if isinstance(server_hosts, str):
-        logger.info(f"Requesting device list from {server_hosts}:{server_port}")
-        request = ListRequest()
-        response = send_request(request, server_hosts, server_port, timeout=timeout)
-        logger.info(f"Retrieved {len(response.data)} devices")
-        return response.data
-
-    # Handle multiple servers
     logger.info(f"Querying {len(server_hosts)} servers for device lists")
     results = {}
 
@@ -112,6 +105,7 @@ def list_devices(
         try:
             request = ListRequest()
             response = send_request(request, server, server_port, timeout=timeout)
+            assert isinstance(response, ListResponse)
             results[server] = response.data
             logger.debug(f"Server {server}: {len(response.data)} devices")
         except Exception as e:
@@ -123,23 +117,23 @@ def list_devices(
 
 def attach_detach_device(
     args: AttachRequest,
-    server_hosts: list[str] | str = "localhost",
-    server_port=5055,
+    server_hosts: list[str],
+    server_port: int = 5055,
     detach: bool = False,
     timeout: float | None = None,
-) -> UsbDevice | tuple[UsbDevice, str]:
+) -> tuple[UsbDevice, str]:
     """
     Request to attach or detach a USB device from server(s).
 
     Args:
         args: AttachRequest with device search criteria
-        server_hosts: Single server hostname/IP or list of server hostnames/IPs
+        server_hosts: list of server hostnames/IPs
         server_port: Server port number
         detach: Whether to detach instead of attach
         timeout: Connection timeout in seconds. If None, uses configured timeout.
 
     Returns:
-        If server_hosts is a string: UsbDevice that was attached/detached
+        If server_hosts is a string: Tuple of (UsbDevice, None)
         If server_hosts is a list: Tuple of (UsbDevice, server_host)
             where device was found
 
@@ -148,34 +142,6 @@ def attach_detach_device(
     """
     action = "detach" if detach else "attach"
 
-    if timeout is None:
-        timeout = get_timeout()
-
-    # Handle single server (backward compatibility)
-    if isinstance(server_hosts, str):
-        logger.info(f"Requesting {action} from {server_hosts}:{server_port}")
-        response = send_request(args, server_hosts, server_port, timeout=timeout)
-
-        if not detach:
-            logger.info(f"Attaching device {response.data.bus_id} to local system")
-            run_command(
-                [
-                    "sudo",
-                    "usbip",
-                    "attach",
-                    "-r",
-                    server_hosts,
-                    "-b",
-                    response.data.bus_id,
-                ]
-            )
-            logger.info(f"Device attached successfully: {response.data.description}")
-        else:
-            logger.info(f"Device detached: {response.data.description}")
-
-        return response.data
-
-    # Handle multiple servers
     logger.info(f"Scanning {len(server_hosts)} servers for device to {action}")
     matches = []
 
@@ -185,6 +151,7 @@ def attach_detach_device(
             response = send_request(
                 args, server, server_port, raise_on_error=False, timeout=timeout
             )
+            assert isinstance(response, AttachResponse)
             matches.append((response.data, server))
             logger.debug(f"Match found on {server}: {response.data.description}")
         except RuntimeError as e:
@@ -211,7 +178,9 @@ def attach_detach_device(
 
     device, server = matches[0]
 
-    if not detach:
+    if detach:
+        logger.info(f"Device detached: {device.description}")
+    else:
         logger.info(f"Attaching device {device.bus_id} from {server} to local system")
         run_command(
             [
@@ -225,8 +194,6 @@ def attach_detach_device(
             ]
         )
         logger.info(f"Device attached: {device.description}")
-    else:
-        logger.info(f"Device detached: {device.description}")
 
     logger.info(f"Device {action}ed on server {server}: {device.description}")
     return device, server

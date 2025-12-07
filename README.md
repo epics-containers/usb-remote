@@ -5,21 +5,25 @@
 
 # awusb
 
-a container that mounts remote devices locally using anywhereusb
+Client-server software to share USB devices over the network.
 
 Source          | <https://github.com/epics-containers/awusb>
 :---:           | :---:
 Docker          | `docker run ghcr.io/epics-containers/awusb:latest`
 Releases        | <https://github.com/epics-containers/awusb/releases>
 
+## Documentation
+
+- **[Quick Start Guide](docs/QUICKSTART.md)** - Get started from installation to first device share
+- **[Architecture](docs/ARCHITECTURE.md)** - Understand the client-server model and design
+
 ## Multi-Server Configuration
 
 You can configure `awusb` to scan multiple USB device servers automatically. The client discovers configuration files in the following priority order:
 
-1. **Command-line flag**: `--config /path/to/config.yaml`
-2. **Environment variable**: `AWUSB_CONFIG=/path/to/config.yaml`
-3. **Project-local config**: `.awusb.config` in current directory
-4. **User config**: `~/.config/awusb/awusb.config` (default)
+1. **Environment variable**: `AWUSB_CONFIG=/path/to/config.yaml`
+1. **Project-local config**: `.awusb.config` in current directory
+1. **User config**: `~/.config/awusb/awusb.config` (default)
 
 Create a configuration file with the following format:
 
@@ -50,10 +54,6 @@ awusb list
 # Use environment variable (useful in CI/CD)
 export AWUSB_CONFIG=/etc/awusb/production.config
 awusb list
-
-# Use command-line flag (highest priority)
-awusb list --config /tmp/test-servers.yaml
-awusb attach --desc Camera --config ./custom.config
 ```
 
 ### Connection Timeout
@@ -101,9 +101,25 @@ awusb detach --desc "Camera" --first
 
 You can install the awusb server as a systemd service to run automatically at boot.
 
-### User Service (Recommended)
+### System Service (Recommended)
 
-Install as a user service (runs when you log in):
+Install as a system service (runs at boot, before login):
+
+```bash
+# Install as system service (requires sudo)
+sudo awusb install-service --system
+
+# Enable and start
+sudo systemctl enable awusb.service
+sudo systemctl start awusb.service
+
+# Check status
+sudo systemctl status awusb.service
+```
+
+### User Service (Not Recommended)
+
+Install as a user service (runs when you log in) useful for testing if you don't have sudo access:
 
 ```bash
 # Install the service
@@ -122,21 +138,6 @@ systemctl --user status awusb.service
 journalctl --user -u awusb.service -f
 ```
 
-### System Service
-
-Install as a system service (runs at boot, before login):
-
-```bash
-# Install as system service (requires sudo)
-sudo awusb install-service --system
-
-# Enable and start
-sudo systemctl enable awusb.service
-sudo systemctl start awusb.service
-
-# Check status
-sudo systemctl status awusb.service
-```
 
 ### Uninstalling
 
@@ -147,11 +148,3 @@ awusb uninstall-service
 # Uninstall system service (requires sudo)
 sudo awusb uninstall-service --system
 ```
-
-### Service Features
-
-- **Automatic restart**: Service restarts automatically if it crashes
-- **Security hardening**: Runs with limited privileges
-- **Logging**: All output is captured by systemd journal
-- **Boot persistence**: Can be enabled to start automatically
-

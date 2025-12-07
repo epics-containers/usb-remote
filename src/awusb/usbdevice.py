@@ -76,10 +76,13 @@ class UsbDevice(BaseModel):
         try:
             serial = getattr(device, "serial_number", "")
         except (ValueError, usb.core.USBError):
-            pass
+            pass  # leave serial as ""
 
-        # it is very hard to get vendor and product strings due to permissions
+        # It is very hard to get vendor and product strings due to permissions
         # so call out to lsusb which has no issue extracting them
+        # UPDATE: when running as a system service, these are available for
+        # most devices but the resulting descriptions are less informative.
+        # (I don't fully understand where lsusb gets its description string from!)
         description = "unknown"
         try:
             lsusb_result = run_command(
@@ -105,7 +108,11 @@ class UsbDevice(BaseModel):
 
 
 def get_device(
-    id: str, bus: str, desc: str, first: bool, serial: str | None = None
+    id: str = "",
+    bus: str = "",
+    desc: str = "",
+    first: bool = False,
+    serial: str | None = None,
 ) -> UsbDevice:
     """
     Retrieve a USB device based on filtering criteria.
@@ -115,7 +122,7 @@ def get_device(
         bus: The bus ID string (e.g., "1-2.3.4")
         desc: A substring to match in the device description
         serial: The serial number to match
-        first: Whether to return the first matching device
+        first: Whether to return the first match or raise an error on multiple matches
     Returns:
         A UsbDevice instance matching the criteria.
     """
@@ -159,10 +166,11 @@ def get_devices() -> list[UsbDevice]:
     Returns:
         list: A list of connected USB devices.
     """
-    # Call the system CLI usbip list -lp and parse the output
+    # Call the system CLI usbip list -lp to get a list of shareable USB devices
     result = run_command(["usbip", "list", "-pl"])
     pattern = r"busid=([^#]+)#usbid=([0-9a-f]+):([0-9a-f]+)#"
 
+    # Parse the output and extract detailed information for each device
     devices: list[UsbDevice] = []
     for match in re.finditer(pattern, result.stdout, re.DOTALL):
         busid, vendor, product = match.groups()
