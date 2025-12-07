@@ -39,14 +39,15 @@ class CommandServer:
         criteria = args.model_dump(exclude={"command", "detach"})
         logger.debug(f"Looking for device with criteria: {criteria}")
         device = get_device(**criteria)
-        detach = args.detach
+
         logger.info(f"Unbinding device {device.bus_id}")
         run_command(["sudo", "usbip", "unbind", "-b", device.bus_id], check=False)
-        if not detach:
+
+        if args.detach:
+            logger.info(f"Device unbound: {device.bus_id} ({device.description})")
+        else:
             logger.info(f"Binding device: {device.bus_id} ({device.description})")
             run_command(["sudo", "usbip", "bind", "-b", device.bus_id])
-        else:
-            logger.info(f"Device unbound: {device.bus_id} ({device.description})")
         return device
 
     def _send_response(
