@@ -76,10 +76,10 @@ def send_request(
 
 
 def list_devices(
-    server_hosts: list[str] | str = "localhost",
+    server_hosts: list[str],
     server_port=5055,
     timeout: float | None = None,
-) -> dict[str, list[UsbDevice]] | list[UsbDevice]:
+) -> dict[str, list[UsbDevice]]:
     """
     Request list of available USB devices from server(s).
 
@@ -123,23 +123,23 @@ def list_devices(
 
 def attach_detach_device(
     args: AttachRequest,
-    server_hosts: list[str] | str = "localhost",
+    server_hosts: list[str],
     server_port=5055,
     detach: bool = False,
     timeout: float | None = None,
-) -> UsbDevice | tuple[UsbDevice, str]:
+) -> tuple[UsbDevice, str]:
     """
     Request to attach or detach a USB device from server(s).
 
     Args:
         args: AttachRequest with device search criteria
-        server_hosts: Single server hostname/IP or list of server hostnames/IPs
+        server_hosts: list of server hostnames/IPs
         server_port: Server port number
         detach: Whether to detach instead of attach
         timeout: Connection timeout in seconds. If None, uses configured timeout.
 
     Returns:
-        If server_hosts is a string: UsbDevice that was attached/detached
+        If server_hosts is a string: Tuple of (UsbDevice, None)
         If server_hosts is a list: Tuple of (UsbDevice, server_host)
             where device was found
 
@@ -151,31 +151,6 @@ def attach_detach_device(
     if timeout is None:
         timeout = get_timeout()
 
-    # Handle single server (backward compatibility)
-    if isinstance(server_hosts, str):
-        logger.info(f"Requesting {action} from {server_hosts}:{server_port}")
-        response = send_request(args, server_hosts, server_port, timeout=timeout)
-
-        if not detach:
-            logger.info(f"Attaching device {response.data.bus_id} to local system")
-            run_command(
-                [
-                    "sudo",
-                    "usbip",
-                    "attach",
-                    "-r",
-                    server_hosts,
-                    "-b",
-                    response.data.bus_id,
-                ]
-            )
-            logger.info(f"Device attached successfully: {response.data.description}")
-        else:
-            logger.info(f"Device detached: {response.data.description}")
-
-        return response.data
-
-    # Handle multiple servers
     logger.info(f"Scanning {len(server_hosts)} servers for device to {action}")
     matches = []
 

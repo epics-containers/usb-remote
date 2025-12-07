@@ -94,25 +94,17 @@ def list_command(
         devices = get_devices()
         for device in devices:
             print(device)
-    elif host:
-        # Single server specified
-        logger.debug(f"Listing devices from {host}")
-        devices = cast(
-            list[UsbDevice], list_devices(server_hosts=host, server_port=5055)
-        )
-        for device in devices:
-            print(device)
     else:
-        # Query all servers from config
-        servers = get_servers()
+        if host:
+            servers = [host]
+        else:
+            servers = get_servers()
         if not servers:
             logger.warning("No servers configured, defaulting to localhost")
             servers = ["localhost"]
 
-        results = cast(
-            dict[str, list[UsbDevice]],
-            list_devices(server_hosts=servers, server_port=5055),
-        )
+        results = list_devices(server_hosts=servers, server_port=5055)
+
         for server, devices in results.items():
             print(f"\n=== {server} ===")
             if devices:
@@ -132,30 +124,21 @@ def attach_detach(detach: bool = False, **kwargs) -> tuple[UsbDevice, str | None
     host = kwargs.get("host")
 
     if host:
-        # Single server specified
-        result = attach_detach_device(
-            args=args,
-            server_hosts=host,
-            server_port=5055,
-            detach=detach,
-        )
-        device = cast(UsbDevice, result)
-        return device, None
+        servers = [host]
     else:
-        # Scan all servers from config
         servers = get_servers()
-        if not servers:
-            logger.warning("No servers configured, defaulting to localhost")
-            servers = ["localhost"]
+    if not servers:
+        logger.warning("No servers configured, defaulting to localhost")
+        servers = ["localhost"]
 
-        result = attach_detach_device(
-            args=args,
-            server_hosts=servers,
-            server_port=5055,
-            detach=detach,
-        )
-        device, server = cast(tuple[UsbDevice, str], result)
-        return device, server
+    result = attach_detach_device(
+        args=args,
+        server_hosts=servers,
+        server_port=5055,
+        detach=detach,
+    )
+    device, server = cast(tuple[UsbDevice, str], result)
+    return device, server
 
 
 @app.command()
