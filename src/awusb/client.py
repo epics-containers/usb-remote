@@ -21,12 +21,12 @@ DEFAULT_TIMEOUT = 5.0
 
 
 def send_request(
-    request,
-    server_host="localhost",
-    server_port=5055,
-    raise_on_error=True,
+    request: ListRequest | AttachRequest,
+    server_host: str = "localhost",
+    server_port: int = 5055,
+    raise_on_error: bool = True,
     timeout: float | None = DEFAULT_TIMEOUT,
-):
+) -> ListResponse | AttachResponse:
     """
     Send a request to the server and return the response.
 
@@ -81,7 +81,7 @@ def send_request(
 
 def list_devices(
     server_hosts: list[str],
-    server_port=5055,
+    server_port: int = 5055,
     timeout: float | None = None,
 ) -> dict[str, list[UsbDevice]]:
     """
@@ -105,6 +105,7 @@ def list_devices(
         try:
             request = ListRequest()
             response = send_request(request, server, server_port, timeout=timeout)
+            assert isinstance(response, ListResponse)
             results[server] = response.data
             logger.debug(f"Server {server}: {len(response.data)} devices")
         except Exception as e:
@@ -117,7 +118,7 @@ def list_devices(
 def attach_detach_device(
     args: AttachRequest,
     server_hosts: list[str],
-    server_port=5055,
+    server_port: int = 5055,
     detach: bool = False,
     timeout: float | None = None,
 ) -> tuple[UsbDevice, str]:
@@ -150,6 +151,7 @@ def attach_detach_device(
             response = send_request(
                 args, server, server_port, raise_on_error=False, timeout=timeout
             )
+            assert isinstance(response, AttachResponse)
             matches.append((response.data, server))
             logger.debug(f"Match found on {server}: {response.data.description}")
         except RuntimeError as e:

@@ -108,7 +108,11 @@ class UsbDevice(BaseModel):
 
 
 def get_device(
-    id: str, bus: str, desc: str, first: bool, serial: str | None = None
+    id: str = "",
+    bus: str = "",
+    desc: str = "",
+    first: bool = False,
+    serial: str | None = None,
 ) -> UsbDevice:
     """
     Retrieve a USB device based on filtering criteria.

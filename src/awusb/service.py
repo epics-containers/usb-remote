@@ -74,7 +74,9 @@ def _run_systemctl(args: list[str], system_wide: bool, check: bool = True) -> No
     run_command(cmd, check=check)
 
 
-def install_systemd_service(user: str | None = None, system_wide: bool = False) -> None:
+def install_systemd_service(
+    user: str | None = None, system_wide: bool = False
+) -> None:
     """
     Install the awusb server as a systemd service.
 
