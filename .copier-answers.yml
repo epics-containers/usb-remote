@@ -1,5 +1,5 @@
 # Changes here will be overwritten by Copier
-_commit: 5.0.0a5
+_commit: 5.0.1
 _src_path: https://github.com/diamondlightsource/python-copier-template
 author_email: giles.knap@diamond.ac.uk
 author_name: Giles Knap
@@ -11,7 +11,7 @@ docs_type: README
 git_platform: github.com
 github_org: epics-containers
 package_name: awusb
-pypi: false
+pypi: true
 repo_name: awusb
-strict_typing: true
+strict_typing: false
 type_checker: pyright

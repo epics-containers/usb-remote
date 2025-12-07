@@ -1,6 +1,6 @@
 [![CI](https://github.com/epics-containers/awusb/actions/workflows/ci.yml/badge.svg)](https://github.com/epics-containers/awusb/actions/workflows/ci.yml)
 [![Coverage](https://codecov.io/gh/epics-containers/awusb/branch/main/graph/badge.svg)](https://codecov.io/gh/epics-containers/awusb)
-
+[![PyPI](https://img.shields.io/pypi/v/awusb.svg)](https://pypi.org/project/awusb)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
 # awusb
@@ -9,6 +9,7 @@ Client-server software to share USB devices over the network.
 
 Source          | <https://github.com/epics-containers/awusb>
 :---:           | :---:
+PyPI            | `pip install awusb`
 Docker          | `docker run ghcr.io/epics-containers/awusb:latest`
 Releases        | <https://github.com/epics-containers/awusb/releases>
 
