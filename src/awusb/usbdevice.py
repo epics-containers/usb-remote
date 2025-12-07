@@ -76,10 +76,13 @@ class UsbDevice(BaseModel):
         try:
             serial = getattr(device, "serial_number", "")
         except (ValueError, usb.core.USBError):
-            pass
+            pass  # leave serial as ""
 
-        # it is very hard to get vendor and product strings due to permissions
+        # It is very hard to get vendor and product strings due to permissions
         # so call out to lsusb which has no issue extracting them
+        # UPDATE: when running as a system service, these are available for
+        # most devices but the resulting descriptions are less informative.
+        # (I don't fully understand where lsusb gets its description string from!)
         description = "unknown"
         try:
             lsusb_result = run_command(
