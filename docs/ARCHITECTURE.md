@@ -10,7 +10,7 @@ It intentionaly provides no security features, relying on network-level security
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                         AWUSB Architecture                       │
+│                         AWUSB Architecture                      │
 └─────────────────────────────────────────────────────────────────┘
 
 ┌──────────────┐                                  ┌──────────────┐
@@ -19,10 +19,10 @@ It intentionaly provides no security features, relying on network-level security
 │   Machine    │        Port 5055 (JSON)          │   Machine    │
 │              │                                  │              │
 └──────────────┘                                  └──────────────┘
-      │                                                   │
+      │                                                  │
       │ usbip attach/detach                              │ usbip bind
       │ (USB/IP kernel)                                  │ (USB/IP kernel)
-      ▼                                                   ▼
+      ▼                                                  ▼
 ┌──────────────┐                                  ┌──────────────┐
 │   Virtual    │         USB/IP Protocol          │   Physical   │
 │ USB Devices  │◄────────────────────────────────►│ USB Devices  │
@@ -166,8 +166,8 @@ Server Start
          ├──────► attach: Find device
          │                Return device details
          │
-         └──────► detach: Find device
-                         Return device details
+         ├──────► detach: Find device
+         │                Return device details
          │
          ▼
 ┌─────────────────┐
@@ -185,65 +185,7 @@ Server Start
 
 Communication uses JSON messages validated by Pydantic models.
 
-**Request Types:**
-
-- **ListRequest**: Query available devices
-  ```json
-  {
-    "command": "list"
-  }
-  ```
-
-- **AttachRequest**: Find and prepare device
-  ```json
-  {
-    "command": "attach",
-    "id": "0c45:6340",
-    "bus": "1-2.3",
-    "desc": "Camera",
-    "serial": "SN12345",
-    "first": false
-  }
-  ```
-
-**Response Types:**
-
-- **ListResponse**: Device list
-  ```json
-  {
-    "data": [
-      {
-        "bus_id": "1-2.3",
-        "vendor_id": "0c45",
-        "product_id": "6340",
-        "description": "USB Camera",
-        "serial": "SN12345",
-        ...
-      }
-    ]
-  }
-  ```
-
-- **AttachResponse**: Single device
-  ```json
-  {
-    "data": {
-      "bus_id": "1-2.3",
-      "vendor_id": "0c45",
-      "product_id": "6340",
-      "description": "USB Camera",
-      "serial": "SN12345",
-      ...
-    }
-  }
-  ```
-
-- **ErrorResponse**: Error details
-  ```json
-  {
-    "message": "No matching device found"
-  }
-  ```
+See [models.py](../src/awusb//models.py) for full details.
 
 ### 4. USB/IP Layer
 
@@ -287,7 +229,6 @@ Protocol:
 
 ### Discovery Priority
 
-1. **`--config` flag**: Explicit path in command
 2. **`AWUSB_CONFIG` env var**: Environment override
 3. **`.awusb.config`**: Project-local config
 4. **`~/.config/awusb/awusb.config`**: User default

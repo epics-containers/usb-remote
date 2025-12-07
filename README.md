@@ -17,6 +17,7 @@ Releases        | <https://github.com/epics-containers/awusb/releases>
 
 - **[Quick Start Guide](docs/QUICKSTART.md)** - Get started from installation to first device share
 - **[Architecture](docs/ARCHITECTURE.md)** - Understand the client-server model and design
+- **[Raspberry Pi Setup](docs/RASBERRYPI.md)** - Guide to setting up a Raspberry Pi as a USB server
 
 ## Multi-Server Configuration
 
