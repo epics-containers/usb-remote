@@ -8,7 +8,13 @@ import typer
 
 from . import __version__
 from .client import attach_detach_device, list_devices
-from .config import get_servers
+from .config import (
+    DEFAULT_CONFIG_PATH,
+    discover_config_path,
+    get_config,
+    get_servers,
+    save_servers,
+)
 from .models import AttachRequest
 from .server import CommandServer
 from .service import install_systemd_service, uninstall_systemd_service
@@ -17,6 +23,8 @@ from .usbdevice import UsbDevice, get_devices
 __all__ = ["main"]
 
 app = typer.Typer()
+config_app = typer.Typer()
+app.add_typer(config_app, name="config", help="Manage configuration")
 logger = logging.getLogger(__name__)
 
 
@@ -88,7 +96,7 @@ def list_command(
         None, "--host", "-H", help="Server hostname or IP address"
     ),
 ) -> None:
-    """List the available USB devices from the server(s)."""
+    """List the available USB devices from configured server(s)."""
     if local:
         logger.debug("Listing local USB devices")
         devices = get_devices()
@@ -117,7 +125,7 @@ def list_command(
 
 
 def attach_detach(detach: bool = False, **kwargs) -> tuple[UsbDevice, str | None]:
-    """Attach or detach a USB device from the server.
+    """Attach or detach a USB device from a server.
 
     Returns:
         Tuple of (device, server) where server is None if --host was specified
@@ -162,7 +170,7 @@ def attach(
         False, "--first", "-f", help="Attach the first match if multiple found"
     ),
 ) -> None:
-    """Attach a USB device from the server."""
+    """Attach a USB device from a server."""
     result, server = attach_detach(
         False,
         id=id,
@@ -197,7 +205,7 @@ def detach(
         False, "--first", "-f", help="Attach the first match if multiple found"
     ),
 ) -> None:
-    """Detach a USB device from the server."""
+    """Detach a USB device from a server."""
     result, server = attach_detach(
         True,
         id=id,
@@ -249,6 +257,88 @@ def uninstall_service(
     except RuntimeError as e:
         typer.echo(f"Uninstallation failed: {e}", err=True)
         raise typer.Exit(1) from e
+
+
+@config_app.command(name="show")
+def config_show() -> None:
+    """Show current configuration."""
+    config_path = discover_config_path()
+
+    if config_path is None:
+        typer.echo("No configuration file found.")
+        typer.echo(f"Default location: {DEFAULT_CONFIG_PATH}")
+        typer.echo("\nDefault configuration:")
+    else:
+        typer.echo(f"Configuration file: {config_path}")
+        typer.echo()
+
+    config = get_config()
+
+    typer.echo(f"Servers ({len(config.servers)}):")
+    if config.servers:
+        for server in config.servers:
+            typer.echo(f"  - {server}")
+    else:
+        typer.echo("  (none)")
+
+    typer.echo(f"\nTimeout: {config.timeout}s")
+
+
+@config_app.command(name="add-server")
+def config_add_server(
+    server: str = typer.Argument(..., help="Server hostname or IP address"),
+) -> None:
+    """Add a server to the configuration."""
+    config = get_config()
+
+    if server in config.servers:
+        typer.echo(f"Server '{server}' is already in the configuration.", err=True)
+        raise typer.Exit(1)
+
+    config.servers.append(server)
+    save_servers(config.servers)
+
+    config_path = discover_config_path() or DEFAULT_CONFIG_PATH
+    typer.echo(f"Added server '{server}' to {config_path}")
+
+
+@config_app.command(name="rm-server")
+def config_remove_server(
+    server: str = typer.Argument(..., help="Server hostname or IP address"),
+) -> None:
+    """Remove a server from the configuration."""
+    config_path = discover_config_path()
+
+    if config_path is None:
+        typer.echo("No configuration file found.", err=True)
+        raise typer.Exit(1)
+
+    config = get_config()
+
+    if server not in config.servers:
+        typer.echo(f"Server '{server}' is not in the configuration.", err=True)
+        raise typer.Exit(1)
+
+    config.servers.remove(server)
+    save_servers(config.servers)
+    typer.echo(f"Removed server '{server}' from {config_path}")
+
+
+@config_app.command(name="set-timeout")
+def config_set_timeout(
+    timeout: float = typer.Argument(..., help="Connection timeout in seconds"),
+) -> None:
+    """Set the connection timeout."""
+    if timeout <= 0:
+        typer.echo("Timeout must be greater than 0.", err=True)
+        raise typer.Exit(1)
+
+    config = get_config()
+    config.timeout = timeout
+    config.to_file()
+
+    config_path = discover_config_path() or DEFAULT_CONFIG_PATH
+    typer.echo(f"Set timeout to {timeout}s in {config_path}")
 
 
 def main(args: Sequence[str] | None = None) -> None:
