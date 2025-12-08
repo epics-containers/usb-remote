@@ -16,7 +16,7 @@ TODO: we will provice a pre-built iso image for Raspberry Pi OS with awusb serve
 
 ## Install Raspberry Pi OS
 
-1. Install Raspberry Pi OS Lite version on your Raspberry Pi.
+1. Install Raspberry Pi OS Lite (although if you need to use Wifi, the Full version is much easier) on your Raspberry Pi.
    - Follow the official Raspberry Pi documentation for installation instructions. at https://www.raspberrypi.com/documentation/computers/getting-started.html#raspberry-pi-imager
 2. Create a user account and set up SSH access.
 3. Install packages and kernel modules:
@@ -52,6 +52,7 @@ TODO: we will provice a pre-built iso image for Raspberry Pi OS with awusb serve
     ```bash
     sudo systemctl enable usbipd --now
     ```
+
 6. Install uv as root using https://docs.astral.sh/uv/getting-started/installation/#installation-methods
 
 7. Install awusb server as a system service:
