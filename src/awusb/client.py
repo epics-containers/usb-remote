@@ -166,7 +166,6 @@ def attach_detach_device(
 
     if len(matches) == 0:
         msg = f"No matching device found across {len(server_hosts)} servers"
-        logger.error(msg)
         raise RuntimeError(msg)
 
     if len(matches) > 1 and not args.first:

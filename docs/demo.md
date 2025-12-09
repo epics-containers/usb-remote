@@ -26,10 +26,10 @@ Specific to giles laptop and two pis (pi1 and pi2)
 - plug keyboard into pi1
 - awusb list
   - see keyboard attached to pi1
-- awwusb attach --desc Wired
+- awusb attach --desc Wired
   - demo typing
 - plug keyboard into p2
-- awwusb attach --desc Wired
+- awusb attach --desc Wired
   - demo typing
 - clean up
   - awusb detach --id=0c45:1a90 --bus=1-2.1
