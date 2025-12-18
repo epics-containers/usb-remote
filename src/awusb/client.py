@@ -3,14 +3,14 @@ import socket
 
 from pydantic import TypeAdapter
 
-from .config import get_timeout
-from .models import (
-    AttachRequest,
-    AttachResponse,
+from .api import (
+    DeviceRequest,
+    DeviceResponse,
     ErrorResponse,
     ListRequest,
     ListResponse,
 )
+from .config import get_timeout
 from .usbdevice import UsbDevice
 from .utility import run_command
 
@@ -21,12 +21,12 @@ DEFAULT_TIMEOUT = 5.0
 
 
 def send_request(
-    request: ListRequest | AttachRequest,
+    request: ListRequest | DeviceRequest,
     server_host: str = "localhost",
     server_port: int = 5055,
     raise_on_error: bool = True,
     timeout: float | None = DEFAULT_TIMEOUT,
-) -> ListResponse | AttachResponse:
+) -> ListResponse | DeviceResponse:
     """
     Send a request to the server and return the response.
 
@@ -62,7 +62,7 @@ def send_request(
             logger.debug("Received response from server")
             # Parse response using TypeAdapter to handle union types
             response_adapter = TypeAdapter(
-                ListResponse | AttachResponse | ErrorResponse
+                ListResponse | DeviceResponse | ErrorResponse
             )
             decoded = response_adapter.validate_json(response)
 
@@ -115,15 +115,14 @@ def list_devices(
     return results
 
 
-def attach_detach_device(
-    args: AttachRequest,
+def device_command(
+    args: DeviceRequest,
     server_hosts: list[str],
     server_port: int = 5055,
-    detach: bool = False,
     timeout: float | None = None,
 ) -> tuple[UsbDevice, str]:
     """
-    Request to attach or detach a USB device from server(s).
+    Request to find/attach/detach a USB device from server(s).
 
     Args:
         args: AttachRequest with device search criteria
@@ -140,9 +139,8 @@ def attach_detach_device(
     Raises:
         RuntimeError: If device not found or multiple matches found (list mode only)
     """
-    action = "detach" if detach else "attach"
 
-    logger.info(f"Scanning {len(server_hosts)} servers for device to {action}")
+    logger.info(f"Scanning {len(server_hosts)} servers for device to {args.command}")
     matches = []
 
     for server in server_hosts:
@@ -151,7 +149,7 @@ def attach_detach_device(
             response = send_request(
                 args, server, server_port, raise_on_error=False, timeout=timeout
             )
-            assert isinstance(response, AttachResponse)
+            assert isinstance(response, DeviceResponse)
             matches.append((response.data, server))
             logger.debug(f"Match found on {server}: {response.data.description}")
         except RuntimeError as e:
@@ -178,9 +176,7 @@ def attach_detach_device(
 
     device, server = matches[0]
 
-    if detach:
-        logger.info(f"Device detached: {device.description}")
-    else:
+    if args.command == "attach":
         logger.info(f"Attaching device {device.bus_id} from {server} to local system")
         run_command(
             [
@@ -194,6 +190,4 @@ def attach_detach_device(
             ]
         )
         logger.info(f"Device attached: {device.description}")
-
-    logger.info(f"Device {action}ed on server {server}: {device.description}")
     return device, server

@@ -7,39 +7,45 @@ from pydantic import BaseModel
 from .usbdevice import UsbDevice
 
 
-class ListRequest(BaseModel):
+class StrictBaseModel(BaseModel):
+    """Base model with strict validation - no extra fields allowed."""
+
+    class Config:
+        extra = "forbid"
+
+
+class ListRequest(StrictBaseModel):
     """Request to list available USB devices."""
 
     command: Literal["list"] = "list"
 
 
-class AttachRequest(BaseModel):
-    """Request to attach a USB device."""
+class DeviceRequest(StrictBaseModel):
+    """Request to find/attach/detach a USB device."""
 
-    command: Literal["attach"] = "attach"
+    command: Literal["find", "attach", "detach"]
     id: str | None = None
     bus: str | None = None
     serial: str | None = None
     desc: str | None = None
     first: bool = False
-    detach: bool = False
 
 
-class ListResponse(BaseModel):
+class ListResponse(StrictBaseModel):
     """Response containing list of USB devices."""
 
     status: Literal["success"]
     data: list[UsbDevice]
 
 
-class AttachResponse(BaseModel):
+class DeviceResponse(StrictBaseModel):
     """Response to attach request."""
 
     status: Literal["success", "failure"]
     data: UsbDevice
 
 
-class ErrorResponse(BaseModel):
+class ErrorResponse(StrictBaseModel):
     """Error response."""
 
     status: Literal["error"]

@@ -27,14 +27,14 @@ from unittest.mock import patch
 
 import pytest
 
-from awusb.client import attach_detach_device, list_devices
-from awusb.models import (
-    AttachRequest,
-    AttachResponse,
+from awusb.api import (
+    DeviceRequest,
+    DeviceResponse,
     ErrorResponse,
     ListRequest,
     ListResponse,
 )
+from awusb.client import device_command, list_devices
 from awusb.server import CommandServer
 from awusb.usbdevice import UsbDevice
 
@@ -159,7 +159,7 @@ class TestAttachRequest:
 
     def test_attach_request_with_id(self):
         """Test AttachRequest with device ID."""
-        request = AttachRequest(id="1234:5678")
+        request = DeviceRequest(id="1234:5678")
         json_data = request.model_dump_json()
         parsed = json.loads(json_data)
 
@@ -168,7 +168,7 @@ class TestAttachRequest:
 
     def test_attach_request_with_serial(self):
         """Test AttachRequest with serial number."""
-        request = AttachRequest(serial="ABC123")
+        request = DeviceRequest(serial="ABC123")
         json_data = request.model_dump_json()
         parsed = json.loads(json_data)
 
@@ -177,7 +177,7 @@ class TestAttachRequest:
 
     def test_attach_request_with_bus(self):
         """Test AttachRequest with bus ID."""
-        request = AttachRequest(bus="1-1.1")
+        request = DeviceRequest(bus="1-1.1")
         json_data = request.model_dump_json()
         parsed = json.loads(json_data)
 
@@ -186,7 +186,7 @@ class TestAttachRequest:
 
     def test_attach_request_first_flag(self):
         """Test AttachRequest with first flag."""
-        request = AttachRequest(first=True)
+        request = DeviceRequest(first=True)
         json_data = request.model_dump_json()
         parsed = json.loads(json_data)
 
@@ -195,7 +195,7 @@ class TestAttachRequest:
 
     def test_attach_request_detach_flag(self):
         """Test AttachRequest with detach flag."""
-        request = AttachRequest(detach=True)
+        request = DeviceRequest(detach=True)
         json_data = request.model_dump_json()
         parsed = json.loads(json_data)
 
@@ -204,7 +204,7 @@ class TestAttachRequest:
 
     def test_attach_response_success(self, mock_usb_devices):
         """Test successful AttachResponse."""
-        response = AttachResponse(status="success", data=mock_usb_devices[0])
+        response = DeviceResponse(status="success", data=mock_usb_devices[0])
         json_data = response.model_dump_json()
         parsed = json.loads(json_data)
 
@@ -213,7 +213,7 @@ class TestAttachRequest:
 
     def test_attach_response_failure(self, mock_usb_devices):
         """Test failure AttachResponse."""
-        response = AttachResponse(status="failure", data=mock_usb_devices[0])
+        response = DeviceResponse(status="failure", data=mock_usb_devices[0])
         json_data = response.model_dump_json()
         parsed = json.loads(json_data)
 
@@ -258,8 +258,8 @@ class TestClientServerIntegration:
     def test_attach_device_integration(self, server, server_port, mock_usb_devices):
         """Test full attach device flow from client to server."""
         with patch("awusb.client.run_command"):
-            request = AttachRequest(id="1234:5678")
-            device, server_name = attach_detach_device(
+            request = DeviceRequest(id="1234:5678")
+            device, server_name = device_command(
                 request, server_hosts=["127.0.0.1"], server_port=server_port
             )
 
@@ -269,8 +269,8 @@ class TestClientServerIntegration:
 
     def test_detach_device_integration(self, server, server_port, mock_usb_devices):
         """Test full detach device flow from client to server."""
-        request = AttachRequest(id="1234:5678", detach=True)
-        device, server_name = attach_detach_device(
+        request = DeviceRequest(id="1234:5678", detach=True)
+        device, server_name = device_command(
             request, server_hosts=["127.0.0.1"], server_port=server_port, detach=True
         )
 
@@ -332,7 +332,7 @@ class TestProtocolRobustness:
 
     def test_request_with_all_fields_null(self):
         """Test AttachRequest with all optional fields as None."""
-        request = AttachRequest(
+        request = DeviceRequest(
             id=None,
             bus=None,
             serial=None,

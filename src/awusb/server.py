@@ -4,9 +4,9 @@ import threading
 
 from pydantic import TypeAdapter, ValidationError
 
-from .models import (
-    AttachRequest,
-    AttachResponse,
+from .api import (
+    DeviceRequest,
+    DeviceResponse,
     ErrorResponse,
     ListRequest,
     ListResponse,
@@ -31,29 +31,41 @@ class CommandServer:
         logger.debug(f"Found {len(result)} USB devices")
         return result
 
-    def handle_attach(
+    def attach(self, device: UsbDevice):
+        """Attach (bind) the specified USB device."""
+        logger.info(f"Attaching device: {device.bus_id} ({device.description})")
+        run_command(["sudo", "usbip", "bind", "-b", device.bus_id])
+        logger.info(f"Device attached: {device.bus_id} ({device.description})")
+
+    def detach(self, device: UsbDevice):
+        """Detach (unbind) the specified USB device."""
+        logger.info(f"Detaching device: {device.bus_id} ({device.description})")
+        run_command(["sudo", "usbip", "unbind", "-b", device.bus_id])
+        logger.info(f"Device detached: {device.bus_id} ({device.description})")
+
+    def handle_device(
         self,
-        args: AttachRequest,
+        args: DeviceRequest,
     ) -> UsbDevice:
-        """Handle the 'attach' command with optional arguments."""
-        criteria = args.model_dump(exclude={"command", "detach"})
+        """Handle the a device command with optional search criteria."""
+        criteria = args.model_dump(exclude={"command"})
         logger.debug(f"Looking for device with criteria: {criteria}")
         device = get_device(**criteria)
 
-        logger.info(f"Unbinding device {device.bus_id}")
-        run_command(["sudo", "usbip", "unbind", "-b", device.bus_id], check=False)
+        match args.command:
+            case "attach":
+                self.attach(device)
+            case "detach":
+                self.detach(device)
+            case "find":
+                logger.info(f"Found device: {device.bus_id} ({device.description})")
 
-        if args.detach:
-            logger.info(f"Device unbound: {device.bus_id} ({device.description})")
-        else:
-            logger.info(f"Binding device: {device.bus_id} ({device.description})")
-            run_command(["sudo", "usbip", "bind", "-b", device.bus_id])
         return device
 
     def _send_response(
         self,
         client_socket: socket.socket,
-        response: ListResponse | AttachResponse | ErrorResponse,
+        response: ListResponse | DeviceResponse | ErrorResponse,
     ):
         """Send a JSON response to the client."""
         client_socket.sendall(response.model_dump_json().encode("utf-8") + b"\n")
@@ -72,7 +84,7 @@ class CommandServer:
                 return
 
             # Try to parse as either ListRequest or AttachRequest
-            request_adapter = TypeAdapter(ListRequest | AttachRequest)
+            request_adapter = TypeAdapter(ListRequest | DeviceRequest)
             try:
                 request = request_adapter.validate_json(data)
             except ValidationError as e:
@@ -82,17 +94,18 @@ class CommandServer:
                 self._send_response(client_socket, response)
                 return
 
+            logger.info(
+                f"{request.command.capitalize()} request from {address}: {request}"
+            )
+
             if isinstance(request, ListRequest):
-                logger.info(f"List request from {address}")
                 result = self.handle_list()
                 response = ListResponse(status="success", data=result)
                 self._send_response(client_socket, response)
 
-            elif isinstance(request, AttachRequest):
-                action = "detach" if request.detach else "attach"
-                logger.info(f"{action.capitalize()} request from {address}: {request}")
-                result = self.handle_attach(args=request)
-                response = AttachResponse(status="success", data=result)
+            elif isinstance(request, DeviceRequest):
+                result = self.handle_device(args=request)
+                response = DeviceResponse(status="success", data=result)
                 self._send_response(client_socket, response)
 
         except Exception as e:
