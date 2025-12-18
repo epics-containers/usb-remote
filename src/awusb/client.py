@@ -5,7 +5,7 @@ import socket
 from pydantic import TypeAdapter
 
 from .config import get_timeout
-from .models import (
+from .api import (
     AttachRequest,
     AttachResponse,
     ErrorResponse,

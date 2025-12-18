@@ -5,7 +5,7 @@ import threading
 
 from pydantic import TypeAdapter, ValidationError
 
-from .models import (
+from .api import (
     AttachRequest,
     AttachResponse,
     ErrorResponse,

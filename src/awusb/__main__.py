@@ -6,6 +6,8 @@ from typing import cast
 
 import typer
 
+from awusb.port import Port
+
 from . import __version__
 from .client import attach_detach_device, list_devices
 from .config import (
@@ -15,7 +17,7 @@ from .config import (
     get_servers,
     save_servers,
 )
-from .models import AttachRequest
+from .api import AttachRequest
 from .server import CommandServer
 from .service import install_systemd_service, uninstall_systemd_service
 from .usbdevice import UsbDevice, get_devices
@@ -123,22 +125,21 @@ def list_command(
             else:
                 typer.echo("No devices or server unavailable")
 
+
 @app.command()
 def ports() -> None:
     """List the local usbip ports in use."""
-    from awusb.port import list_ports
-
-    ports = list_ports()
+    ports = Port.list_ports()
     if not ports:
         typer.echo("No local usbip ports in use.")
         return
 
-    # for port in ports:
-    #     typer.echo(
-    #         f"Port {port['port']}: {port['devicename']} (BusID: {port['busid']}, "
-    #         f"Status: {port['status']}, Vendor: {port['vendor']}, Product: {port['product']}, "
-    #         f"Remote IP: {port['remote_ip']}, Remote BusID: {port['remote_busid']})"
-    #     )
+    for port in ports:
+        typer.echo(
+            f"Port {port.port_number}:\n  {port.description} "
+            f"\n  ({port.id}) from {port.server} busid {port.remote_busid}"
+        )
+
 
 def attach_detach(detach: bool = False, **kwargs) -> tuple[UsbDevice, str | None]:
     """Attach or detach a USB device from a server.
