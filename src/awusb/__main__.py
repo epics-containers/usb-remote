@@ -6,6 +6,8 @@ from typing import cast
 
 import typer
 
+from awusb.port import Port
+
 from . import __version__
 from .client import attach_detach_device, list_devices
 from .config import (
@@ -65,6 +67,21 @@ def common_options(
     # Store debug flag in context for commands that need it
     ctx.ensure_object(dict)
     ctx.obj["debug"] = debug
+
+
+@app.command()
+def ports() -> None:
+    """List the local usbip ports in use."""
+    ports = Port.list_ports()
+    if not ports:
+        typer.echo("No local usbip ports in use.")
+        return
+
+    for port in ports:
+        typer.echo(
+            f"Port {port.port_number}:\n  {port.description} "
+            f"\n  ({port.id}) from {port.server} busid {port.remote_busid}"
+        )
 
 
 @app.command()
