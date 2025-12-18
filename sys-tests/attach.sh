@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -xe
+
 uvx awusb attach --serial 000001
 uvx awusb attach --serial FTA955HH
 uvx awusb attach --serial FTA94JXC

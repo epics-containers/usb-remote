@@ -1,15 +1,16 @@
 #!/bin/bash
 
-sudo uspip unbind -p 0
-sudo uspip unbind -p 1
-sudo uspip unbind -p 2
-sudo uspip unbind -p 3
-sudo uspip unbind -p 4
-sudo uspip unbind -p 5
-sudo uspip unbind -p 6
-sudo uspip unbind -p 7
-sudo uspip unbind -p 8
-sudo uspip unbind -p 9
-sudo uspip unbind -p 10
-sudo uspip unbind -p 11
-sudo uspip unbind -p 12
+sudo usbip detach -p 0
+sudo usbip detach -p 1
+sudo usbip detach -p 2
+sudo usbip detach -p 3
+sudo usbip detach -p 4
+sudo usbip detach -p 5
+sudo usbip detach -p 6
+sudo usbip detach -p 7
+sudo usbip detach -p 8
+sudo usbip detach -p 9
+sudo usbip detach -p 10
+sudo usbip detach -p 11
+sudo usbip detach -p 12
+sudo usbip port
