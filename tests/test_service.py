@@ -176,8 +176,12 @@ class TestUninstallSystemdService:
 
         # Verify stop and disable were called
         assert mock_systemctl.call_count == 3  # stop, disable, daemon-reload
-        mock_systemctl.assert_any_call(["stop", "usb-remote.service"], False, check=False)
-        mock_systemctl.assert_any_call(["disable", "usb-remote.service"], False, check=False)
+        mock_systemctl.assert_any_call(
+            ["stop", "usb-remote.service"], False, check=False
+        )
+        mock_systemctl.assert_any_call(
+            ["disable", "usb-remote.service"], False, check=False
+        )
         mock_systemctl.assert_any_call(["daemon-reload"], False)
 
         # Verify file was deleted
@@ -191,8 +195,12 @@ class TestUninstallSystemdService:
                 uninstall_systemd_service(system_wide=True)
 
         # Verify system-wide calls
-        mock_systemctl.assert_any_call(["stop", "usb-remote.service"], True, check=False)
-        mock_systemctl.assert_any_call(["disable", "usb-remote.service"], True, check=False)
+        mock_systemctl.assert_any_call(
+            ["stop", "usb-remote.service"], True, check=False
+        )
+        mock_systemctl.assert_any_call(
+            ["disable", "usb-remote.service"], True, check=False
+        )
         mock_systemctl.assert_any_call(["daemon-reload"], True)
 
     @patch("usb_remote.service._run_systemctl")
