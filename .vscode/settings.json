@@ -9,4 +9,19 @@
     "[python]": {
         "editor.defaultFormatter": "charliermarsh.ruff",
     },
+    "cSpell.words": [
+        "bootfs",
+        "cmdline",
+        "conv",
+        "raspi",
+        "raspios",
+        "sdcard",
+        "sdcards",
+        "unxz",
+        "usbip",
+        "usbipd",
+        "userconf",
+        "uspipd",
+        "Wifi"
+    ],
 }

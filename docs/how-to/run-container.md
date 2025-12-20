@@ -7,8 +7,10 @@ installed are available on [Github Container Registry](https://ghcr.io/epics-con
 
 To pull the container from github container registry and run:
 
+(privileged mode is required to access USB and modify devices)
+
 ```
-$ docker run ghcr.io/epics-containers/usb-remote:latest --version
+$ docker --privileged run ghcr.io/epics-containers/usb-remote:latest --version
 ```
 
 To get a released version, use a numbered release instead of `latest`.
