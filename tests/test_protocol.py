@@ -276,8 +276,11 @@ class TestClientServerIntegration:
         """Test full detach device flow from client to server."""
         from usb_remote.client import detach_device
 
-        # Mock send_request since detach_device doesn't accept server_port parameter
-        with patch("usb_remote.client.send_request") as mock_send:
+        # Mock Port.get_port_by_remote_busid to return None to avoid run_command call
+        with (
+            patch("usb_remote.client.send_request") as mock_send,
+            patch("usb_remote.client.Port.get_port_by_remote_busid", return_value=None),
+        ):
             detach_device(bus_id="1-1.1", server_host="127.0.0.1")
             # Verify send_request was called with correct parameters
             assert mock_send.called
