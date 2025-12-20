@@ -1,16 +1,16 @@
-# AWUSB Architecture
+# USB_REMOTE Architecture
 
-This document explains the architecture and design of AWUSB (Anywhere USB).
+This document explains the architecture and design of USB_REMOTE (Anywhere USB).
 
 ## Overview
 
-AWUSB is a client-server system for sharing USB devices over a network using the USB/IP protocol. It provides a high-level Python interface with automatic device discovery across multiple servers.
+USB_REMOTE is a client-server system for sharing USB devices over a network using the USB/IP protocol. It provides a high-level Python interface with automatic device discovery across multiple servers.
 
 It intentionaly provides no security features, relying on network-level security instead. This makes it very simple to deploy and operate in controlled environments.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                         AWUSB Architecture                      │
+│                         USB_REMOTE Architecture                      │
 └─────────────────────────────────────────────────────────────────┘
 
 ┌──────────────┐                                  ┌──────────────┐
@@ -37,7 +37,7 @@ It intentionaly provides no security features, relying on network-level security
 
 ## Components
 
-### 1. Client (awusb CLI)
+### 1. Client (usb-remote CLI)
 
 The client provides a user-friendly command-line interface for managing remote USB devices.
 
@@ -109,7 +109,7 @@ User Command
     Display Result
 ```
 
-### 2. Server (awusb server)
+### 2. Server (usb-remote server)
 
 The server runs on machines with USB devices to share, exposing them via a JSON API.
 
@@ -185,11 +185,11 @@ Server Start
 
 Communication uses JSON messages validated by Pydantic models.
 
-See [models.py](../src/awusb//models.py) for full details.
+See [models.py](../src/usb-remote//models.py) for full details.
 
 ### 4. USB/IP Layer
 
-AWUSB leverages the Linux USB/IP kernel driver for actual device sharing.
+USB_REMOTE leverages the Linux USB/IP kernel driver for actual device sharing.
 
 **USB/IP Components:**
 
@@ -213,7 +213,7 @@ Protocol:
 └──────────────────────┘
 ```
 
-**How AWUSB Uses USB/IP:**
+**How USB_REMOTE Uses USB/IP:**
 
 1. **Server side:**
    - Lists devices: `usbip list -lp`
@@ -229,9 +229,9 @@ Protocol:
 
 ### Discovery Priority
 
-2. **`AWUSB_CONFIG` env var**: Environment override
-3. **`.awusb.config`**: Project-local config
-4. **`~/.config/awusb/awusb.config`**: User default
+2. **`USB_REMOTE_CONFIG` env var**: Environment override
+3. **`.usb-remote.config`**: Project-local config
+4. **`~/.config/usb-remote/usb-remote.config`**: User default
 
 ### Configuration Model
 

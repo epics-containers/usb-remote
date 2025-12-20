@@ -1,17 +1,17 @@
-[![CI](https://github.com/epics-containers/awusb/actions/workflows/ci.yml/badge.svg)](https://github.com/epics-containers/awusb/actions/workflows/ci.yml)
-[![Coverage](https://codecov.io/gh/epics-containers/awusb/branch/main/graph/badge.svg)](https://codecov.io/gh/epics-containers/awusb)
-[![PyPI](https://img.shields.io/pypi/v/awusb.svg)](https://pypi.org/project/awusb)
+[![CI](https://github.com/epics-containers/usb-remote/actions/workflows/ci.yml/badge.svg)](https://github.com/epics-containers/usb-remote/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/epics-containers/usb-remote/branch/main/graph/badge.svg)](https://codecov.io/gh/epics-containers/usb-remote)
+[![PyPI](https://img.shields.io/pypi/v/usb-remote.svg)](https://pypi.org/project/usb-remote)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
-# awusb
+# usb-remote
 
 Client-server software to share USB devices over the network.
 
-Source          | <https://github.com/epics-containers/awusb>
+Source          | <https://github.com/epics-containers/usb-remote>
 :---:           | :---:
-PyPI            | `pip install awusb`
-Docker          | `docker run ghcr.io/epics-containers/awusb:latest`
-Releases        | <https://github.com/epics-containers/awusb/releases>
+PyPI            | `pip install usb-remote`
+Docker          | `docker run ghcr.io/epics-containers/usb-remote:latest`
+Releases        | <https://github.com/epics-containers/usb-remote/releases>
 
 ## Documentation
 
@@ -21,11 +21,11 @@ Releases        | <https://github.com/epics-containers/awusb/releases>
 
 ## Multi-Server Configuration
 
-You can configure `awusb` to scan multiple USB device servers automatically. The client discovers configuration files in the following priority order:
+You can configure `usb-remote` to scan multiple USB device servers automatically. The client discovers configuration files in the following priority order:
 
-1. **Environment variable**: `AWUSB_CONFIG=/path/to/config.yaml`
-1. **Project-local config**: `.awusb.config` in current directory
-1. **User config**: `~/.config/awusb/awusb.config` (default)
+1. **Environment variable**: `USB_REMOTE_CONFIG=/path/to/config.yaml`
+1. **Project-local config**: `.usb-remote.config` in current directory
+1. **User config**: `~/.config/usb-remote/usb-remote.config` (default)
 
 Create a configuration file with the following format:
 
@@ -40,22 +40,22 @@ servers:
 timeout: 5.0
 ```
 
-See `awusb.config.example` for a sample configuration file.
+See `usb-remote.config.example` for a sample configuration file.
 
 ### Config File Discovery Examples
 
 ```bash
-# Use default config from ~/.config/awusb/awusb.config
-awusb list
+# Use default config from ~/.config/usb-remote/usb-remote.config
+usb-remote list
 
 # Use project-specific config from current directory
 cd /path/to/project
-echo "servers: [myserver]" > .awusb.config
-awusb list
+echo "servers: [myserver]" > .usb-remote.config
+usb-remote list
 
 # Use environment variable (useful in CI/CD)
-export AWUSB_CONFIG=/etc/awusb/production.config
-awusb list
+export USB_REMOTE_CONFIG=/etc/usb-remote/production.config
+usb-remote list
 ```
 
 ### Connection Timeout
@@ -81,27 +81,27 @@ When a server times out, it's logged as a warning and skipped, allowing other se
 
 ```bash
 # List devices on all configured servers
-awusb list
+usb-remote list
 
 # List devices on a specific server
-awusb list --host raspberrypi
+usb-remote list --host raspberrypi
 
 # Attach a device (scans all servers, fails if multiple matches)
-awusb attach --desc "Camera"
+usb-remote attach --desc "Camera"
 
 # Attach first matching device across servers
-awusb attach --desc "Camera" --first
+usb-remote attach --desc "Camera" --first
 
 # Attach a device from a specific server
-awusb attach --desc "Camera" --host 192.168.1.100
+usb-remote attach --desc "Camera" --host 192.168.1.100
 
 # Detach with first match (if same device attached from multiple servers)
-awusb detach --desc "Camera" --first
+usb-remote detach --desc "Camera" --first
 ```
 
 ## Installing as a Service
 
-You can install the awusb server as a systemd service to run automatically at boot.
+You can install the usb-remote server as a systemd service to run automatically at boot.
 
 ### System Service (Recommended)
 
@@ -109,14 +109,14 @@ Install as a system service (runs at boot, before login):
 
 ```bash
 # Install as system service (requires sudo)
-sudo awusb install-service --system
+sudo usb-remote install-service --system
 
 # Enable and start
-sudo systemctl enable awusb.service
-sudo systemctl start awusb.service
+sudo systemctl enable usb-remote.service
+sudo systemctl start usb-remote.service
 
 # Check status
-sudo systemctl status awusb.service
+sudo systemctl status usb-remote.service
 ```
 
 ### User Service (Not Recommended)
@@ -125,19 +125,19 @@ Install as a user service (runs when you log in) useful for testing if you don't
 
 ```bash
 # Install the service
-awusb install-service
+usb-remote install-service
 
 # Enable it to start on login
-systemctl --user enable awusb.service
+systemctl --user enable usb-remote.service
 
 # Start the service now
-systemctl --user start awusb.service
+systemctl --user start usb-remote.service
 
 # Check status
-systemctl --user status awusb.service
+systemctl --user status usb-remote.service
 
 # View logs
-journalctl --user -u awusb.service -f
+journalctl --user -u usb-remote.service -f
 ```
 
 
@@ -145,8 +145,8 @@ journalctl --user -u awusb.service -f
 
 ```bash
 # Uninstall user service
-awusb uninstall-service
+usb-remote uninstall-service
 
 # Uninstall system service (requires sudo)
-sudo awusb uninstall-service --system
+sudo usb-remote uninstall-service --system
 ```

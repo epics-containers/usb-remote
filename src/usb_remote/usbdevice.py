@@ -4,7 +4,7 @@ import subprocess
 import usb.core
 from pydantic import BaseModel, Field
 
-from awusb.utility import run_command
+from usb_remote.utility import run_command
 
 
 class UsbDevice(BaseModel):

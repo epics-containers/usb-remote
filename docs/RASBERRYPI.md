@@ -12,7 +12,7 @@ TODO: suggestions for cooling.
 
 ## Quick Setup
 
-TODO: we will provice a pre-built iso image for Raspberry Pi OS with awusb server and pre-installed.
+TODO: we will provice a pre-built iso image for Raspberry Pi OS with usb-remote server and pre-installed.
 
 ## Install Raspberry Pi OS
 
@@ -55,15 +55,15 @@ TODO: we will provice a pre-built iso image for Raspberry Pi OS with awusb serve
 
 6. Install uv as root using https://docs.astral.sh/uv/getting-started/installation/#installation-methods
 
-7. Install awusb server as a system service:
+7. Install usb-remote server as a system service:
     ```bash
     sudo -s
-    uvx awusb install-service --system
-    systemctl enable awusb.service --now
+    uvx usb-remote install-service --system
+    systemctl enable usb-remote.service --now
     exit
     ```
-Thats it. Now add your new Raspberry Pi server to your awusb client configuration and start sharing USB devices:
+Thats it. Now add your new Raspberry Pi server to your usb-remote client configuration and start sharing USB devices:
 
 ```bash
-awusb config add-server <your new raspberrypi ip or hostname>
+usb-remote config add-server <your new raspberrypi ip or hostname>
 ```

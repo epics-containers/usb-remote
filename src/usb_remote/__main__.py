@@ -1,11 +1,11 @@
-"""Interface for ``python -m awusb``."""
+"""Interface for ``python -m usb_remote``."""
 
 import logging
 from collections.abc import Sequence
 
 import typer
 
-from awusb.port import Port
+from usb_remote.port import Port
 
 from . import __version__
 from .client import attach_device, detach_device, find_device, list_devices
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 def version_callback(value: bool) -> None:
     """Output version and exit."""
     if value:
-        typer.echo(f"awusb {__version__}")
+        typer.echo(f"usb-remote {__version__}")
         raise typer.Exit()
 
 
@@ -269,7 +269,7 @@ def install_service(
         help="User to run the service as (default: current user)",
     ),
 ) -> None:
-    """Install awusb server as a systemd service."""
+    """Install usb-remote server as a systemd service."""
     try:
         install_systemd_service(user=user, system_wide=system)
     except RuntimeError as e:
@@ -285,7 +285,7 @@ def uninstall_service(
         help="Uninstall system service (requires sudo/root)",
     ),
 ) -> None:
-    """Uninstall awusb server systemd service."""
+    """Uninstall usb-remote server systemd service."""
     try:
         uninstall_systemd_service(system_wide=system)
     except RuntimeError as e:
