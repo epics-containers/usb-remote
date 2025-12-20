@@ -3,7 +3,7 @@ requires = ["setuptools>=64", "setuptools_scm[toml]>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "awusb"
+name = "usb-remote"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: Apache Software License",
@@ -11,7 +11,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
 ]
-description = "a container that mounts remote devices locally using anywhereusb"
+description = "a container that mounts remote devices locally using usb-remote"
 dependencies = [
     "pydantic>=2.0.0",
     "pyusb>=1.3.1",
@@ -36,17 +36,17 @@ dev = [
 ]
 
 [project.scripts]
-awusb = "awusb.__main__:main"
+usb-remote = "usb_remote.__main__:main"
 
 [project.urls]
-GitHub = "https://github.com/epics-containers/awusb"
+GitHub = "https://github.com/epics-containers/usb-remote"
 
 [[project.authors]] # Further authors may be added by duplicating this section
 email = "giles.knap@diamond.ac.uk"
 name = "Giles Knap"
 
 [tool.setuptools_scm]
-version_file = "src/awusb/_version.py"
+version_file = "src/usb_remote/_version.py"
 
 [tool.pyright]
 typeCheckingMode = "standard"
@@ -64,7 +64,7 @@ testpaths = "docs src tests"
 
 [tool.coverage.run]
 patch = ["subprocess"]
-data_file = "/tmp/awusb.coverage"
+data_file = "/tmp/usb_remote.coverage"
 
 [tool.coverage.paths]
 # Tests are run from installed location, map back to the src directory
@@ -111,7 +111,7 @@ description = "Run tests with coverage"
 commands = [
     [
         "pytest",
-        "--cov=awusb",
+        "--cov=usb_remote",
         "--cov-report",
         "term",
         "--cov-report",

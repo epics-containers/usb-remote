@@ -1,6 +1,6 @@
 """Unit tests for the client-server protocol.
 
-This test suite validates the communication protocol between the awusb client
+This test suite validates the communication protocol between the usb-remote client
 and server, including:
 
 1. Request/Response Serialization:
@@ -27,16 +27,16 @@ from unittest.mock import patch
 
 import pytest
 
-from awusb.api import (
+from usb_remote.api import (
     DeviceRequest,
     DeviceResponse,
     ErrorResponse,
     ListRequest,
     ListResponse,
 )
-from awusb.client import list_devices
-from awusb.server import CommandServer
-from awusb.usbdevice import UsbDevice
+from usb_remote.client import list_devices
+from usb_remote.server import CommandServer
+from usb_remote.usbdevice import UsbDevice
 
 
 @pytest.fixture
@@ -77,21 +77,21 @@ def server_port():
 @pytest.fixture
 def mock_get_devices(mock_usb_devices):
     """Mock the get_devices function."""
-    with patch("awusb.server.get_devices", return_value=mock_usb_devices):
+    with patch("usb_remote.server.get_devices", return_value=mock_usb_devices):
         yield
 
 
 @pytest.fixture
 def mock_get_device(mock_usb_devices):
     """Mock the get_device function."""
-    with patch("awusb.server.get_device", return_value=mock_usb_devices[0]):
+    with patch("usb_remote.server.get_device", return_value=mock_usb_devices[0]):
         yield
 
 
 @pytest.fixture
 def mock_run_command():
     """Mock the run_command function to avoid actual system calls."""
-    with patch("awusb.server.run_command"):
+    with patch("usb_remote.server.run_command"):
         yield
 
 
@@ -257,10 +257,10 @@ class TestClientServerIntegration:
 
     def test_find_device_integration(self, server, server_port, mock_usb_devices):
         """Test full find device flow from client to server."""
-        from awusb.client import find_device
+        from usb_remote.client import find_device
 
         # Mock send_request to return a device response
-        with patch("awusb.client.send_request") as mock_send:
+        with patch("usb_remote.client.send_request") as mock_send:
             mock_send.return_value = DeviceResponse(
                 status="success", data=mock_usb_devices[0]
             )
@@ -274,10 +274,13 @@ class TestClientServerIntegration:
 
     def test_detach_device_integration(self, server, server_port, mock_usb_devices):
         """Test full detach device flow from client to server."""
-        from awusb.client import detach_device
+        from usb_remote.client import detach_device
 
-        # Mock send_request since detach_device doesn't accept server_port parameter
-        with patch("awusb.client.send_request") as mock_send:
+        # Mock Port.get_port_by_remote_busid to return None to avoid run_command call
+        with (
+            patch("usb_remote.client.send_request") as mock_send,
+            patch("usb_remote.client.Port.get_port_by_remote_busid", return_value=None),
+        ):
             detach_device(bus_id="1-1.1", server_host="127.0.0.1")
             # Verify send_request was called with correct parameters
             assert mock_send.called
@@ -324,7 +327,9 @@ class TestClientServerIntegration:
     def test_client_handles_error_response(self, server, server_port, mock_get_devices):
         """Test that client properly handles error responses."""
         # Override the mock to raise an exception
-        with patch("awusb.server.get_devices", side_effect=Exception("Test error")):
+        with patch(
+            "usb_remote.server.get_devices", side_effect=Exception("Test error")
+        ):
             result = list_devices(server_hosts=["127.0.0.1"], server_port=server_port)
             # In multi-server mode, errors are caught and the server returns empty list
             assert "127.0.0.1" in result

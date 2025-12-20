@@ -2,12 +2,12 @@
 
 set -xe
 
-uvx awusb attach --serial 000001
-uvx awusb attach --serial FTA955HH
-uvx awusb attach --serial FTA94JXC
-uvx awusb attach --serial FTA974AY
-uvx awusb attach --serial 0019C52F
-uvx awusb attach --serial 0000000000000001
-uvx awusb attach --desc Unifying
-uvx awusb attach --desc Scope
-uvx awusb attach --desc WebCam
+uvx usb-remote attach --serial 000001
+uvx usb-remote attach --serial FTA955HH
+uvx usb-remote attach --serial FTA94JXC
+uvx usb-remote attach --serial FTA974AY
+uvx usb-remote attach --serial 0019C52F
+uvx usb-remote attach --serial 0000000000000001
+uvx usb-remote attach --desc Unifying
+uvx usb-remote attach --desc Scope
+uvx usb-remote attach --desc WebCam

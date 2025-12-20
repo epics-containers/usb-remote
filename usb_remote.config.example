@@ -1,10 +1,10 @@
-# Example awusb configuration file
+# Example usb-remote configuration file
 #
 # Config file discovery (in priority order):
-#   1. --config flag: awusb list --config /path/to/config.yaml
-#   2. AWUSB_CONFIG environment variable
-#   3. .awusb.config in current directory (project-local)
-#   4. ~/.config/awusb/awusb.config (this default location)
+#   1. --config flag: usb-remote list --config /path/to/config.yaml
+#   2. USB_REMOTE_CONFIG environment variable
+#   3. .usb-remote.config in current directory (project-local)
+#   4. ~/.config/usb-remote/usb-remote.config (this default location)
 #
 # To use this file, copy it to one of the above locations and edit as needed.
 

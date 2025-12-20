@@ -1,6 +1,6 @@
-# AWUSB Quick Start Guide
+# USB_REMOTE Quick Start Guide
 
-This guide will help you get started with AWUSB, from installation to sharing your first USB device over the network.
+This guide will help you get started with USB_REMOTE, from installation to sharing your first USB device over the network.
 
 ## Table of Contents
 
@@ -61,21 +61,21 @@ echo "vhci-hcd" | sudo tee /etc/modules-load.d/usbip.conf
 
 ```bash
 # Create a virtual environment (recommended)
-python -m venv ~/.venv/awusb
-source ~/.venv/awusb/bin/activate
+python -m venv ~/.venv/usb-remote
+source ~/.venv/usb-remote/bin/activate
 
-# Install awusb
-pip install awusb
+# Install usb-remote
+pip install usb-remote
 
 # Verify installation
-awusb --version
+usb-remote --version
 ```
 
 ### Install from Source
 
 ```bash
-git clone https://github.com/epics-containers/awusb.git
-cd awusb
+git clone https://github.com/epics-containers/usb-remote.git
+cd usb-remote
 pip install -e .
 ```
 
@@ -84,7 +84,7 @@ pip install -e .
 For system-wide installation:
 
 ```bash
-sudo pip install awusb
+sudo pip install usb-remote
 ```
 
 ## First-Time Setup
@@ -98,7 +98,7 @@ The server is the machine with USB devices you want to share.
 Check what USB devices are available:
 
 ```bash
-awusb list -l
+usb-remote list -l
 ```
 
 You should see a list like:
@@ -116,7 +116,7 @@ You should see a list like:
 **Option A: Run directly (for testing)**
 
 ```bash
-awusb server
+usb-remote server
 ```
 
 The server runs on port 5055 by default.
@@ -127,16 +127,16 @@ NOTE: a user service only has limited access to device parameters e.g. serial nu
 
 ```bash
 # Install as user service
-awusb install-service
+usb-remote install-service
 
 # Enable to start on login
-systemctl --user enable awusb.service
+systemctl --user enable usb-remote.service
 
 # Start the service
-systemctl --user start awusb.service
+systemctl --user start usb-remote.service
 
 # Check status
-systemctl --user status awusb.service
+systemctl --user status usb-remote.service
 ```
 
 For system-wide installation (starts at boot):
@@ -144,9 +144,9 @@ For system-wide installation (starts at boot):
 We recommend installing like this in an isolated 'instrumentation' network.
 
 ```bash
-sudo awusb install-service --system
-sudo systemctl enable awusb.service
-sudo systemctl start awusb.service
+sudo usb-remote install-service --system
+sudo systemctl enable usb-remote.service
+sudo systemctl start usb-remote.service
 ```
 
 #### 3. Verify Server is Running
@@ -155,10 +155,10 @@ From another terminal:
 
 ```bash
 # If running locally
-awusb list --host localhost
+usb-remote list --host localhost
 
 # From another machine (replace with server's IP)
-awusb list --host 192.168.1.100
+usb-remote list --host 192.168.1.100
 ```
 
 ### Client Setup
@@ -171,10 +171,10 @@ Create a configuration file to specify your servers:
 
 ```bash
 # Create config directory
-mkdir -p ~/.config/awusb
+mkdir -p ~/.config/usb-remote
 
 # Create config file
-cat > ~/.config/awusb/awusb.config << EOF
+cat > ~/.config/usb-remote/usb-remote.config << EOF
 servers:
   - localhost
   - 192.168.1.100
@@ -188,14 +188,14 @@ Or use the CLI:
 
 ```bash
 # Add servers one at a time
-awusb config add-server 192.168.1.100
-awusb config add-server usb-server-1.local
+usb-remote config add-server 192.168.1.100
+usb-remote config add-server usb-server-1.local
 
 # Set timeout
-awusb config set-timeout 5.0
+usb-remote config set-timeout 5.0
 
 # View current config
-awusb config show
+usb-remote config show
 ```
 
 #### 2. Test Connectivity
@@ -203,7 +203,7 @@ awusb config show
 List devices from all configured servers:
 
 ```bash
-awusb list
+usb-remote list
 ```
 
 You should see output grouped by server:
@@ -226,7 +226,7 @@ Server: usb-server-1.local
 List all available devices:
 
 ```bash
-awusb list
+usb-remote list
 ```
 
 Identify the device you want to attach by its description, serial number, or ID.
@@ -236,25 +236,25 @@ Identify the device you want to attach by its description, serial number, or ID.
 **Attach by description:**
 
 ```bash
-awusb attach --desc "Camera"
+usb-remote attach --desc "Camera"
 ```
 
 **Attach by serial number (most specific):**
 
 ```bash
-awusb attach --serial SN12345
+usb-remote attach --serial SN12345
 ```
 
 **Attach by vendor:product ID:**
 
 ```bash
-awusb attach --id 0c45:6340
+usb-remote attach --id 0c45:6340
 ```
 
 **Attach by bus ID (from a specific server):**
 
 ```bash
-awusb attach --bus 1-2.3 --host 192.168.1.100
+usb-remote attach --bus 1-2.3 --host 192.168.1.100
 ```
 
 ### Step 3: Verify the Device is Attached
@@ -289,13 +289,13 @@ Detach the device when you're finished:
 
 ```bash
 # By description
-awusb detach --desc "Camera"
+usb-remote detach --desc "Camera"
 
 # By serial
-awusb detach --serial SN12345
+usb-remote detach --serial SN12345
 
 # By ID
-awusb detach --id 0c45:6340
+usb-remote detach --id 0c45:6340
 ```
 
 ## Next Steps
@@ -306,22 +306,22 @@ If you have devices on multiple servers:
 
 ```bash
 # List shows devices from all servers
-awusb list
+usb-remote list
 
 # Attach automatically finds the device on any server
-awusb attach --serial SN12345
+usb-remote attach --serial SN12345
 
 # Use --first if multiple servers have matching devices
-awusb attach --desc "Camera" --first
+usb-remote attach --desc "Camera" --first
 ```
 
 ### Project-Specific Configuration
 
-Create a `.awusb.config` file in your project directory:
+Create a `.usb-remote.config` file in your project directory:
 
 ```bash
 cd /path/to/project
-cat > .awusb.config << EOF
+cat > .usb-remote.config << EOF
 servers:
   - test-server-1
   - test-server-2
@@ -329,7 +329,7 @@ timeout: 10.0
 EOF
 
 # Now commands in this directory use this config
-awusb list
+usb-remote list
 ```
 
 ### Advanced Usage
@@ -337,21 +337,21 @@ awusb list
 **Using environment variables:**
 
 ```bash
-export AWUSB_CONFIG=/etc/awusb/production.config
-awusb list
+export USB_REMOTE_CONFIG=/etc/usb-remote/production.config
+usb-remote list
 ```
 
 **Override timeout per command:**
 
 ```bash
-awusb list --host slow-server --timeout 15.0
+usb-remote list --host slow-server --timeout 15.0
 ```
 
 **Debug logging:**
 
 ```bash
-awusb --debug list
-awusb --debug attach --desc "Camera"
+usb-remote --debug list
+usb-remote --debug attach --desc "Camera"
 ```
 
 ### Monitoring
@@ -360,20 +360,20 @@ awusb --debug attach --desc "Camera"
 
 ```bash
 # User service
-journalctl --user -u awusb.service -f
+journalctl --user -u usb-remote.service -f
 
 # System service
-sudo journalctl -u awusb.service -f
+sudo journalctl -u usb-remote.service -f
 ```
 
 **Check service status:**
 
 ```bash
 # User service
-systemctl --user status awusb.service
+systemctl --user status usb-remote.service
 
 # System service
-sudo systemctl status awusb.service
+sudo systemctl status usb-remote.service
 ```
 
 ## Common Issues
@@ -390,5 +390,5 @@ See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for detailed troubleshooting steps.
 ## Getting Help
 
 - Documentation: See `docs/` directory
-- Issues: <https://github.com/epics-containers/awusb/issues>
+- Issues: <https://github.com/epics-containers/usb-remote/issues>
 - Security: See [SECURITY.md](SECURITY.md)

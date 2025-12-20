@@ -5,19 +5,19 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "awusb attach",
+            "name": "usb-remote attach",
             "type": "debugpy",
             "request": "launch",
-            "module": "awusb.__main__",
+            "module": "usb-remote.__main__",
             "args": [
                 "attach"
             ],
         },
         {
-            "name": "awusb server",
+            "name": "usb-remote server",
             "type": "debugpy",
             "request": "launch",
-            "module": "awusb.__main__",
+            "module": "usb-remote.__main__",
             "args": [
                 "server"
             ],

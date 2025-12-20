@@ -5,7 +5,7 @@ Module for working with local usbip ports.
 import re
 from dataclasses import dataclass
 
-from awusb.utility import run_command
+from usb_remote.utility import run_command
 
 # regex pattern for matching 'usbip port' output https://regex101.com/r/x0S7wF/1
 # NOTE: this module is fragile because `usbip port` output format may change

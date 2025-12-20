@@ -6,19 +6,19 @@ import shutil
 import sys
 from pathlib import Path
 
-from awusb.utility import run_command
+from usb_remote.utility import run_command
 
 logger = logging.getLogger(__name__)
 
 SYSTEMD_SERVICE_TEMPLATE = """[Unit]
-Description=AWUSB - USB Device Sharing Server
+Description=USB-Remote - USB Device Sharing Server
 After=network.target
 
 [Service]
 Type=simple
 User={user}
 WorkingDirectory={working_dir}
-ExecStart={executable} -m awusb server
+ExecStart={executable} -m usb_remote server
 Restart=on-failure
 RestartSec=5s
 
@@ -57,7 +57,7 @@ def get_systemd_service_content(user: str | None = None) -> str:
 
 def _get_service_paths(system_wide: bool) -> tuple[Path, str]:
     """Get service directory and name based on installation type."""
-    service_name = "awusb.service"
+    service_name = "usb-remote.service"
     if system_wide:
         service_dir = Path("/etc/systemd/system")
     else:
@@ -76,7 +76,7 @@ def _run_systemctl(args: list[str], system_wide: bool, check: bool = True) -> No
 
 def install_systemd_service(user: str | None = None, system_wide: bool = False) -> None:
     """
-    Install the awusb server as a systemd service.
+    Install the usb-remote server as a systemd service.
 
     Args:
         user: Username to run the service as. If None, uses current user.
@@ -132,7 +132,7 @@ def install_systemd_service(user: str | None = None, system_wide: bool = False) 
 
 def uninstall_systemd_service(system_wide: bool = False) -> None:
     """
-    Uninstall the awusb systemd service.
+    Uninstall the usb-remote systemd service.
 
     Args:
         system_wide: True for system service. False for user service.

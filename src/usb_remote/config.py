@@ -1,4 +1,4 @@
-"""Configuration management for awusb."""
+"""Configuration management for usb_remote."""
 
 import logging
 import os
@@ -9,18 +9,18 @@ from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_CONFIG_PATH = Path.home() / ".config" / "awusb" / "awusb.config"
+DEFAULT_CONFIG_PATH = Path.home() / ".config" / "usb-remote" / "usb-remote.config"
 DEFAULT_TIMEOUT = 5.0
 
 
-class AwusbConfig(BaseModel):
-    """Pydantic model for awusb configuration."""
+class UsbRemoteConfig(BaseModel):
+    """Pydantic model for usb_remote configuration."""
 
     servers: list[str] = Field(default_factory=list)
     timeout: float = Field(default=DEFAULT_TIMEOUT, gt=0)
 
     @classmethod
-    def from_file(cls, config_path: Path) -> "AwusbConfig":
+    def from_file(cls, config_path: Path) -> "UsbRemoteConfig":
         """
         Load configuration from a YAML file.
 
@@ -28,7 +28,7 @@ class AwusbConfig(BaseModel):
             config_path: Path to the config file.
 
         Returns:
-            AwusbConfig instance with values from file or defaults.
+            UsbRemoteConfig instance with values from file or defaults.
         """
         try:
             with open(config_path) as f:
@@ -75,25 +75,25 @@ class AwusbConfig(BaseModel):
 def discover_config_path() -> Path | None:
     """
     Discover config file path using the following priority:
-    1. Environment variable AWUSB_CONFIG
-    2. Local .awusb.config in current directory
-    3. Default ~/.config/awusb/awusb.config
+    1. Environment variable USB_REMOTE_CONFIG
+    2. Local .usb-remote.config in current directory
+    3. Default ~/.config/usb_remote/usb-remote.config
 
     Returns:
         Path to config file if found, None otherwise.
     """
     # 1. Check environment variable
-    env_config = os.environ.get("AWUSB_CONFIG")
+    env_config = os.environ.get("USB_REMOTE_CONFIG")
     if env_config:
         env_path = Path(env_config).expanduser()
         if env_path.exists():
-            logger.debug(f"Using config from AWUSB_CONFIG: {env_path}")
+            logger.debug(f"Using config from USB_REMOTE_CONFIG: {env_path}")
             return env_path
         else:
-            logger.warning(f"AWUSB_CONFIG points to non-existent file: {env_path}")
+            logger.warning(f"USB_REMOTE_CONFIG points to non-existent file: {env_path}")
 
     # 2. Check local directory
-    local_config = Path.cwd() / ".awusb.config"
+    local_config = Path.cwd() / ".usb-remote.config"
     if local_config.exists():
         logger.debug(f"Using local config: {local_config}")
         return local_config
@@ -107,26 +107,26 @@ def discover_config_path() -> Path | None:
     return None
 
 
-def get_config() -> AwusbConfig:
+def get_config() -> UsbRemoteConfig:
     """
     Load configuration from file.
 
     Args:
         config_path: Path to config file. If None, discovers using:
-            1. AWUSB_CONFIG environment variable
-            2. .awusb.config in current directory
-            3. ~/.config/awusb/awusb.config (default)
+            1. USB_REMOTE_CONFIG environment variable
+            2. .usb-remote.config in current directory
+            3. ~/.config/usb_remote/usb-remote.config (default)
 
     Returns:
-        AwusbConfig instance with values from file or defaults.
+        UsbRemoteConfig instance with values from file or defaults.
     """
     config_path = discover_config_path()
 
     if config_path is None:
         logger.debug("No config file found, using defaults")
-        return AwusbConfig()
+        return UsbRemoteConfig()
 
-    return AwusbConfig.from_file(config_path)
+    return UsbRemoteConfig.from_file(config_path)
 
 
 def get_servers(config_path: Path | None = None) -> list[str]:
