@@ -252,17 +252,17 @@ def find_device(
             assert isinstance(response, DeviceResponse)
             matches.append((response.data, server))
             logger.debug(f"Match found on {server}: {response.data.description}")
-        except (DeviceNotFoundError, MultipleDevicesError) as e:
-            # Server returned a specific device error (no match or multiple matches)
-            logger.debug(f"Server {server}: {e}")
+        except DeviceNotFoundError as e:
+            # It is OK to not find the device on one of the servers
+            logger.debug(f"Server {server}:\n{e}")
             continue
+        except MultipleDevicesError as e:
+            # Multiple matches on this server
+            logger.error(f"Error on Server {server}:\n{e}")
+            exit(1)
         except RuntimeError as e:
             # Server returned a generic error
-            logger.debug(f"Server {server} error: {e}")
-            continue
-        except Exception as e:
-            # Connection or other error
-            logger.warning(f"Failed to query server {server}: {e}")
+            logger.error(f"Server {server} error: {e}")
             continue
 
     if len(matches) == 0:
@@ -276,7 +276,8 @@ def find_device(
             f"Multiple devices matched across servers:\n{device_list}\n\n"
             "Use --first to attach the first match."
         )
-        raise MultipleDevicesError(msg)
+        logger.error(msg)
+        exit(1)
 
     device, server = matches[0]
 

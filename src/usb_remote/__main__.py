@@ -139,7 +139,7 @@ def list_command(
                 for device in devices:
                     typer.echo(device)
             else:
-                typer.echo("No devices or server unavailable")
+                typer.echo("No devices")
 
 
 def get_host_list(host: str | None) -> list[str]:
