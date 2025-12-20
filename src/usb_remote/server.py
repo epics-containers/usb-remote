@@ -6,6 +6,7 @@ from typing import Literal
 from pydantic import TypeAdapter, ValidationError
 
 from .api import (
+    PORT,
     DeviceRequest,
     DeviceResponse,
     ErrorResponse,
@@ -28,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 class CommandServer:
-    def __init__(self, host: str = "0.0.0.0", port: int = 5055):
+    def __init__(self, host: str = "0.0.0.0", port: int = PORT):
         self.host = host
         self.port = port
         self.server_socket = None

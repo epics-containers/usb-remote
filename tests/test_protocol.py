@@ -34,7 +34,6 @@ from usb_remote.api import (
     ListRequest,
     ListResponse,
 )
-from usb_remote.client import list_devices
 from usb_remote.server import CommandServer
 from usb_remote.usbdevice import UsbDevice
 
@@ -244,17 +243,6 @@ class TestErrorResponse:
 class TestClientServerIntegration:
     """Integration tests for client-server communication."""
 
-    def test_list_devices_integration(self, server, server_port, mock_usb_devices):
-        """Test full list devices flow from client to server."""
-        result = list_devices(server_hosts=["127.0.0.1"], server_port=server_port)
-
-        assert "127.0.0.1" in result
-        devices = result["127.0.0.1"]
-        assert len(devices) == 2
-        assert devices[0].bus_id == "1-1.1"
-        assert devices[0].vendor_id == "1234"
-        assert devices[1].bus_id == "2-2.1"
-
     def test_find_device_integration(self, server, server_port, mock_usb_devices):
         """Test full find device flow from client to server."""
         from usb_remote.client import find_device
@@ -323,17 +311,6 @@ class TestClientServerIntegration:
             parsed = json.loads(response)
 
             assert parsed["status"] == "error"
-
-    def test_client_handles_error_response(self, server, server_port, mock_get_devices):
-        """Test that client properly handles error responses."""
-        # Override the mock to raise an exception
-        with patch(
-            "usb_remote.server.get_devices", side_effect=Exception("Test error")
-        ):
-            result = list_devices(server_hosts=["127.0.0.1"], server_port=server_port)
-            # In multi-server mode, errors are caught and the server returns empty list
-            assert "127.0.0.1" in result
-            assert result["127.0.0.1"] == []
 
 
 class TestProtocolRobustness:

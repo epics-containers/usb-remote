@@ -6,6 +6,8 @@ from pydantic import BaseModel, ConfigDict
 
 from .usbdevice import UsbDevice
 
+PORT = 5055
+
 
 class StrictBaseModel(BaseModel):
     """Base model with strict validation - no extra fields allowed."""
