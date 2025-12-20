@@ -6,6 +6,8 @@ from pydantic import BaseModel, ConfigDict
 
 from .usbdevice import UsbDevice
 
+PORT = 5055
+
 
 class StrictBaseModel(BaseModel):
     """Base model with strict validation - no extra fields allowed."""
@@ -17,6 +19,11 @@ class ListRequest(StrictBaseModel):
     """Request to list available USB devices."""
 
     command: Literal["list"] = "list"
+
+
+find_command = "find"
+attach_command = "attach"
+detach_command = "detach"
 
 
 class DeviceRequest(StrictBaseModel):
@@ -42,6 +49,11 @@ class DeviceResponse(StrictBaseModel):
 
     status: Literal["success", "failure"]
     data: UsbDevice
+
+
+error_response = "error"
+not_found_response = "not_found"
+multiple_matches_response = "multiple_matches"
 
 
 class ErrorResponse(StrictBaseModel):

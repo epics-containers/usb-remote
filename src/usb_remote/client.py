@@ -4,11 +4,15 @@ import socket
 from pydantic import TypeAdapter
 
 from .api import (
+    PORT,
     DeviceRequest,
     DeviceResponse,
     ErrorResponse,
     ListRequest,
     ListResponse,
+    attach_command,
+    detach_command,
+    find_command,
 )
 from .config import get_timeout
 from .port import Port
@@ -24,7 +28,7 @@ DEFAULT_TIMEOUT = 2.0
 def send_request(
     request: ListRequest | DeviceRequest,
     server_host: str = "localhost",
-    server_port: int = 5055,
+    server_port: int = PORT,
     timeout: float | None = None,
 ) -> ListResponse | DeviceResponse:
     """
@@ -89,7 +93,6 @@ def send_request(
 
 def list_devices(
     server_hosts: list[str],
-    server_port: int = 5055,
     timeout: float | None = None,
 ) -> dict[str, list[UsbDevice]]:
     """
@@ -112,7 +115,7 @@ def list_devices(
     for server in server_hosts:
         try:
             request = ListRequest()
-            response = send_request(request, server, server_port, timeout=timeout)
+            response = send_request(request, server, timeout=timeout)
             assert isinstance(response, ListResponse)
             results[server] = response.data
             logger.debug(f"Server {server}: {len(response.data)} devices")
@@ -148,7 +151,6 @@ def attach_device(bus_id: str, server_host: str) -> None:
     Args:
         bus_id: The bus ID of the device to attach
         server_host: Server hostname or IP address
-        server_port: Server port number
         timeout: Connection timeout in seconds. If None, uses configured timeout.
     """
 
@@ -159,7 +161,7 @@ def attach_device(bus_id: str, server_host: str) -> None:
 
     logger.debug(f"Asking remote {server_host} to bind {bus_id} to usbip")
     request = DeviceRequest(
-        command="attach",
+        command=attach_command,
         bus=bus_id,
     )
     send_request(request, server_host)
@@ -186,14 +188,13 @@ def detach_device(bus_id: str, server_host: str) -> None:
     Args:
         bus_id: The bus ID of the device to detach
         server_host: Server hostname or IP address
-        server_port: Server port number
         timeout: Connection timeout in seconds. If None, uses configured timeout.
     """
     detach_local_device(bus_id, server_host)
 
     logger.debug(f"Asking remote {server_host} to unbind {bus_id} from usbip")
     request = DeviceRequest(
-        command="detach",
+        command=detach_command,
         bus=bus_id,
     )
     send_request(request, server_host)
@@ -219,7 +220,6 @@ def find_device(
     Args:
         args: AttachRequest with device search criteria
         server_hosts: list of server hostnames/IPs
-        server_port: Server port number
         timeout: Connection timeout in seconds. If None, uses configured timeout.
 
     Returns:
@@ -235,7 +235,7 @@ def find_device(
     )
 
     request = DeviceRequest(
-        command="find",
+        command=find_command,
         id=id,
         bus=bus,
         desc=desc,
@@ -258,26 +258,25 @@ def find_device(
             continue
         except MultipleDevicesError as e:
             # Multiple matches on this server
-            logger.error(f"Error on Server {server}:\n{e}")
-            exit(1)
-        except RuntimeError as e:
-            # Server returned a generic error
-            logger.error(f"Server {server} error: {e}")
+            raise RuntimeError(f"Server {server}:\n{e}") from e
+        except Exception as e:
+            # Server returned a generic error - continue to next server
+            logger.error(f"Server {server}:\n {e}")
             continue
 
     if len(matches) == 0:
         msg = f"No matching device found across {len(server_hosts)} servers"
-        logger.error(msg)
+        logger.debug(msg, exc_info=True)
         raise DeviceNotFoundError(msg)
 
     if len(matches) > 1 and not request.first:
         device_list = "\n".join(f"  {dev} (on {srv})" for dev, srv in matches)
         msg = (
             f"Multiple devices matched across servers:\n{device_list}\n\n"
-            "Use --first to attach the first match."
+            "Use --first to attach to the first match."
         )
-        logger.error(msg)
-        exit(1)
+        logger.debug(msg, exc_info=True)
+        raise MultipleDevicesError(msg)
 
     device, server = matches[0]
 

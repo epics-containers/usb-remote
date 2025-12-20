@@ -131,7 +131,7 @@ def list_command(
 
         logger.debug(f"Listing remote USB devices on hosts: {servers}")
 
-        results = list_devices(server_hosts=servers, server_port=5055)
+        results = list_devices(server_hosts=servers)
 
         for server, devices in results.items():
             typer.echo(f"\n=== {server} ===")
@@ -379,8 +379,9 @@ def main(args: Sequence[str] | None = None) -> None:
     """Argument parser for the CLI."""
     try:
         app()
-    except RuntimeError as e:
-        typer.echo(f"Error: {e}", err=True)
+    except Exception as e:
+        logger.debug("Exception caught in main()", exc_info=True)
+        typer.echo(f"ERROR: {e}", err=True)
 
 
 if __name__ == "__main__":
