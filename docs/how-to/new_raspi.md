@@ -19,22 +19,25 @@ You will need:
 
 ## Step 1 Image the microSD Card with Raspberry Pi OS
 
-1. Download the latest Raspberry Pi OS Lite image from the [Raspberry Pi website](https://www.raspberrypi.com/software/operating-systems/).
-    - If you plan to use the Raspberry Pi's GUI capabilities, use "Raspberry Pi OS Full" version. Use full if you want to connect to the GovWiFi network which requires a GUI for setup.
+1. Download the latest Raspberry Pi OS Lite image from the [Raspberry Pi website](https://www.raspberrypi.com/software/operating-systems/). The Lite version is the last option on the linked page.
+    - If you plan to use the Raspberry Pi's GUI capabilities, use "Raspberry Pi OS" version. Use this if you want to connect to the GovWiFi network which requires a GUI for setup.
+    - Using the GUI is an alternative to getting an IP address and using SSH to connect. You will need a microHDMI to HDMI cable and a monitor for this.
 1. Use `lsblk` to get a list of block devices on your system before inserting the microSD card.
 1. Insert the microSD card into your card reader and connect it to your computer.
 1. Use `lsblk` again to identify the device name of the microSD card (e.g. `/dev/sdb`).
 1. uncompress the downloaded Raspberry Pi OS image.
     ```bash
      cd ~/Downloads
-     unxz ./2025-12-04-raspios-trixie-arm64.img.xz
+     unxz ./2025-12-04-raspios-trixie-arm64-lite.img.xz
      ```
 1. Use `dd` to write the Raspberry Pi OS image to the microSD card. Replace `/dev/sdX` with the actual device name of your microSD card. Be very careful with this command as it will overwrite the specified device.
     ```bash
-    sudo dd if=./2025-12-04-raspios-trixie-arm64.img of=/dev/sdX bs=4M status=progress conv=fsync
+    sudo dd if=./2025-12-04-raspios-trixie-arm64-lite.img of=/dev/sdX bs=4M status=progress conv=fsync
     ```
 
 ## Step 2 Configure the Raspberry Pi OS Image
+
+IMPORTANT: These steps must be done before the first boot of the Raspberry Pi. The files we set up here are only read by the Raspberry Pi during its first boot.
 
 1. Mount the microSD card boot partition. Replace `/dev/sdX1` with the actual device name of the boot partition of your microSD card.
     ```bash
@@ -63,13 +66,12 @@ You will need:
     sudo umount /dev/sdX
     rmdir sdcard-bootfs
     ```
-1. NOTE: the static IP configuration above must be undone before making a production image to be used on multiple Raspberry Pis. Instead we want the image to use DHCP only and be isolated from the internet.
 
 ## Step 3 First Boot and Connect to Internet
 
 1. Insert the microSD card into your Raspberry Pi and power it on.
 1. Your options for connecting to the Raspberry Pi are:
-    - Connect a monitor and keyboard to the Raspberry Pi directly.
+    - Connect a monitor and keyboard to the Raspberry Pi directly. This is not available if you are using the 'Lite' version and requires a microHDMI to HDMI cable and a monitor.
     - Connect via SSH to the Raspberry Pi's IP address. The username is `local` and the password is `local`. If you have access to your router then it will show the Raspberry Pi's IP address in its connected devices list. The best alternative is to set a fixed IP in the boot configuration as described above.
 1. If you do not have internet access then temporarily connect to Wifi:
     - sudo raspi-config
@@ -77,10 +79,11 @@ You will need:
     - Enter your SSID and password
     - Finish
     - ping google.com to check internet access (try `sudo reboot` if it does not work immediately)
-1. Once connected, update the package lists and upgrade installed packages.
+1. Once connected, update the package lists and upgrade installed packages, plus get vim and git.
     ```bash
     sudo apt update
     sudo apt upgrade -y
+    sudo apt install -y git vim
     ```
 1. Take this opportunity to write down the Raspberry Pi's MAC address for future reference.
     ```bash
@@ -162,57 +165,76 @@ The master sdcard image wants to use DHCP only and be isolated from the internet
     dtoverlay=disable-bt
     ```
 
-## Step 8 Create a Backup Image of the microSD Card
+## Step 8 Prepare the Backup Image for Distribution
+
+The image file you will create will remove the empty space in the root partition to make it nice and small.
+
+For this reason we need to set up a script that will run once on the first boot of any copies of the image made from this master sdcard. The script will expand the root filesystem to fill the sdcard and then enable read-only mode. Read-only mode uses overlayfs in RAM to avoid wearing out the sdcard and makes the Pi reset to a clean state on each boot.
+
+1. Set up a run once service for first boot of copies of the image.
+    ```bash
+    echo '
+    [Unit]
+    Description=Run script once on next boot
+    ConditionPathExists=/var/local/runonce.sh
+
+    [Service]
+    Type=oneshot
+    ExecStart=/bin/bash /var/local/runonce.sh
+    ExecStop=/bin/rm /var/local/runonce.sh
+
+    [Install]
+    WantedBy=multi-user.target' | sudo tee /etc/systemd/system/runonce.service
+    sudo systemctl enable runonce.service
+    ```
+1. Create the `runonce.sh` script to expand the root filesystem and enable read-only mode.
+    ```bash
+    echo '#!/bin/bash
+
+    # Disable this script from running again
+    mv /var/local/runonce.sh /var/local/runonce.sh.done
+
+    # Enable read-only mode
+    sudo raspi-config nonint do_overlayfs 0
+
+    # Expand the root filesystem
+    /usr/lib/raspi-config/init_resize.sh
+
+    # Reboot to apply changes (the resize script normally does this anyway)
+    sudo reboot' | sudo tee /var/local/runonce.sh
+
+    sudo chmod +x /var/local/runonce.sh
+
+    # Add packages required for read-only mode
+    sudo apt-get -y install cryptsetup cryptsetup-bin overlayroot
+    ```
+
+## Step 9 Create a Backup Image of the microSD Card
 
 Before backing up the image we put the SD card into read-only mode. This avoids wearing out the SD card and makes the Pi reset to a clean state on each boot.
 
-1. Set the SD card to read-only mode with an overlay filesystem in RAM.
-    ```bash
-    sudo raspi-config nonint do_overlayfs 0
-    # DO NOT reboot until the backup image has been created
-    # ALSO: ignore warnings about fstab has been modifiedsyn
-    ```
-
 1. Insert a USB stick into the Raspberry Pi to store the backup image.
 
-1. use `lsblk` to identify the device name of the USB stick 1st partition (e.g. `/dev/sda1`). It should already be mounted under `/media/local/xxxx`. If there is no mount then create a mount point and mount it manually:
+1. use `lsblk` to identify the device name of the USB stick 1st partition which will normally be `/dev/sda1`. Mount the USB stick at `/media/local/usb`:
     ```bash
     sudo mkdir -p /media/local/usb
     sudo mount /dev/sda1 /media/local/usb
     ```
 
-1. Run the image-backup script to create a backup image of the microSD card to the USB stick. Replace `/media/local/xxxx` with the actual mount point of your USB stick and adjust the output file path as needed.
+1. Run the image-backup script to create a backup image of the microSD card to the USB stick. Rplace the output file name with something appropriate including the version of usb-remote.
     ```bash
     sudo image-backup
     # when promted for output file, use something like:
-    /media/local/usb/raspi-usb-remote-2025.12.20.img
+    /media/local/usb/raspi-lite-usb-remote-2.1.0.img
     # choose the defaults for the other prompts and y to confirm file creation.
     ```
 1. sync and unmount the USB stick.
     ```bash
     sync
-    sudo umount /media/local/xxxx
+    sudo umount /media/local/usb
     ```
-1. You can now power off the Raspberry Pi and remove the USB stick.
-    ```bash
-    sudo poweroff
-    ```
+1. You can now remove the USB stick.
 
-## Step 9 Prepare the Backup Image for Distribution
-
-The image file you have created has removed the empty space in the root partition to make it nice and small. The contents of boot partition must be updated to tell the Raspberry Pi to expand the root partition to fill the microSD card on first boot. The `pi-shrink` script does this for you.
-
-1. Get the `pi-shrink` script.
-    ```bash
-    curl -fsSO https://raw.githubusercontent.com/Drewsif/PiShrink/master/pishrink.sh
-    chmod +x pishrink.sh
-    ```
-1. Run `pi-shrink` on the backup image you created in Step 8.
-    ```bash
-    sudo ./pishrink.sh /path/to/your/raspi-usb-remote-2025.12.20.img
-    ```
-
-You can ignore the warning "Filesystem already shrunk to smallest size. Skipping filesystem shrinking".
 
 That's it. Your img file can now be used to create additional Raspberry Pi usb-remote servers as needed.
 

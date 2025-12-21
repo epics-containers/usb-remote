@@ -31,7 +31,7 @@ Alternatively, flash your own card.
 1. Use `lsblk` to identify the device name of the microSD card (e.g. `/dev/sdb`).
 1. Flash the image to a microSD card. **CAREFUL** - replace `/dev/sdX` with the correct device name for your microSD card and remember that this will overwrite the specified device.
     ```bash
-    sudo dd if=./raspberry_pi_usb-remote_server.img of=/dev/sdX bs=4M status=progress conv=fsync
+    sudo dd if=./raspi-lite-usb-remote-2.1.0.img of=/dev/sdX bs=4M status=progress conv=fsync
     ```
 
 ## Step 3: Extract the Raspberry Pi MAC Address
