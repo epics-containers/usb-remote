@@ -63,7 +63,7 @@ def send_request(
             sock.sendall(request.model_dump_json().encode("utf-8"))
 
             response = sock.recv(4096).decode("utf-8")
-            logger.debug("Received response from server")
+            logger.debug(f"Received response from server: {response}")
             # Parse response using TypeAdapter to handle union types
             response_adapter = TypeAdapter(
                 ListResponse | DeviceResponse | ErrorResponse
@@ -119,6 +119,8 @@ def list_devices(
             assert isinstance(response, ListResponse)
             results[server] = response.data
             logger.debug(f"Server {server}: {len(response.data)} devices")
+        except DeviceNotFoundError:
+            pass  # expect not to find the device on all servers
         except Exception as e:
             logger.warning(f"Failed to query server {server}: {e}")
             results[server] = []
