@@ -7,15 +7,9 @@ from dataclasses import dataclass
 
 from usb_remote.utility import run_command
 
-# regex pattern for matching 'usbip port' output https://regex101.com/r/x0S7wF/1
-# NOTE: this module is fragile because `usbip port` output format may change
-# in future versions of usbip and it has no machine-readable output format.
+# regex pattern for matching 'usbip port' output https://regex101.com/r/seWBvX/1
 re_ports = re.compile(
-    r"Port *(?P<port>\d\d)(?:.*\n) *(?P<description>.*) "
-    r".*\((?P<id>[0-9a-f]{4}:[0-9a-f]{4})\)\n.*usbip:\/\/"
-    r"(?P<server>\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}):\d*\/"
-    r"(?P<remote_busid>[1-9-.]*)\n",
-    re.MULTILINE,
+    r"[pP]ort *(?P<port>\d\d)[\s\S]*?\n *(?P<description>.*)\n[\s\S]*?usbip:\/\/(?P<server>[^:]*):\d*\/(?P<remote_busid>[1-9-.]*)"  # noqa: E501
 )
 
 
@@ -27,9 +21,8 @@ class Port:
     """
 
     port: str  # the local port number
-    description: str  # description of the device
-    id: str  # the device id (vendor:product)
     server: str  # the server ip address
+    description: str  # the device description (vendor and product)
     remote_busid: str  # the remote busid of the device
 
     def __post_init__(self):
@@ -43,6 +36,13 @@ class Port:
         # be detached
         run_command(
             ["sudo", "usbip", "detach", "-p", str(self.port_number)], check=False
+        )
+
+    def __repr__(self) -> str:
+        return (
+            f"- Port {self.port_number}:\n  "
+            f"{self.description}\n  "
+            f"busid: {self.remote_busid} from {self.server}"
         )
 
     @staticmethod

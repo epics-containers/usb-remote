@@ -76,10 +76,7 @@ def ports() -> None:
         return
 
     for port in ports:
-        typer.echo(
-            f"Port {port.port_number}:\n  {port.description} "
-            f"\n  ({port.id}) from {port.server} busid {port.remote_busid}"
-        )
+        typer.echo(port)
 
 
 @app.command()
