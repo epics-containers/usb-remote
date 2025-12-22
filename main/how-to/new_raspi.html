@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Create a New Raspberry Pi Boot Image From Scratch &#8212; usb-remote 2.0.1.dev4+ga585289d8 documentation</title>
+    <title>Create a New Raspberry Pi Boot Image From Scratch &#8212; usb-remote 2.1.1.dev1+ge1c7651df documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=c5a59493"></script>
+    <script src="../_static/documentation_options.js?v=fe9bba88"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -479,14 +479,36 @@
 <li><p>A microSD card of at least 16GB capacity.</p></li>
 <li><p>A microSD card reader connected to your computer.</p></li>
 <li><p>A Raspberry Pi 4 or 5 to run the image on see <a class="reference internal" href="../reference/recommended_hardware.html"><span class="std std-doc">Recommend Hardware</span></a>.</p></li>
+<li><p>A USB stick of at least 8GB capacity to store the backup image.</p></li>
+<li><p>Possibly a monitor and microHDMI to HDMI cable if you want to use the Pi GUI.</p></li>
 </ul>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Link to this heading">#</a></h2>
+<p>The sequence of events to set this up is:</p>
+<ul class="simple">
+<li><p>Image the microSD card with Raspberry Pi OS.</p></li>
+<li><p>Boot a Raspberry Pi from the microSD card and do some additional configuration.</p></li>
+<li><p>Take a backup image of the microSD card to use as an image for creating more sdcards.</p></li>
+</ul>
+<p>In order to connect to the Raspberry Pi for configuration you have two options:</p>
+<ol class="arabic simple">
+<li><p>Connect a monitor and keyboard to the Raspberry Pi directly. Make sure you use the “Raspberry Pi OS” version which includes the GUI.</p></li>
+<li><p>Connect via SSH to the Raspberry Pi’s IP address. For this to work you need to be able to determine (or fix) the Raspberry Pi’s IP address on your network.</p></li>
+</ol>
+<p>In both cases you will need access to the internet from the Raspberry Pi to download and install packages. Your options are:</p>
+<ol class="arabic simple">
+<li><p>Make sure that your Pi is connected to your wired ethernet network which has internet access.</p></li>
+<li><p>Temporarily connect to Wifi to get internet access during setup. At DLS the GovWiFi network is an easy option for this. You will need to use the GUI option above to set up the Wifi connection.</p></li>
+</ol>
+<p>Bear in mind that the preferred production configuration for usb-remote Raspberry Pis is to have no internet access and only use wired ethernet with a DHCP assigned IP address. The temporary internet access is only needed to download and install packages during setup.</p>
 </section>
 <section id="step-1-image-the-microsd-card-with-raspberry-pi-os">
 <h2>Step 1 Image the microSD Card with Raspberry Pi OS<a class="headerlink" href="#step-1-image-the-microsd-card-with-raspberry-pi-os" title="Link to this heading">#</a></h2>
 <ol class="arabic">
-<li><p>Download the latest Raspberry Pi OS Lite image from the <a class="reference external" href="https://www.raspberrypi.com/software/operating-systems/">Raspberry Pi website</a>.</p>
+<li><p>Download the latest ‘Raspberry Pi OS Lite’ image from the <a class="reference external" href="https://www.raspberrypi.com/software/operating-systems/">Raspberry Pi website</a>. The Lite version is the last option on the linked page.</p>
 <ul class="simple">
-<li><p>If you plan to use the Raspberry Pi’s GUI capabilities, use “Raspberry Pi OS Full” version. Use full if you want to connect to the GovWiFi network which requires a GUI for setup.</p></li>
+<li><p>If you need the Pi desktop GUI, then use ‘Raspberry Pi OS’ image.</p></li>
 </ul>
 </li>
 <li><p>Use <code class="docutils literal notranslate"><span class="pre">lsblk</span></code> to get a list of block devices on your system before inserting the microSD card.</p></li>
@@ -494,12 +516,12 @@
 <li><p>Use <code class="docutils literal notranslate"><span class="pre">lsblk</span></code> again to identify the device name of the microSD card (e.g. <code class="docutils literal notranslate"><span class="pre">/dev/sdb</span></code>).</p></li>
 <li><p>uncompress the downloaded Raspberry Pi OS image.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>~/Downloads
-<span class="w"> </span>unxz<span class="w"> </span>./2025-12-04-raspios-trixie-arm64.img.xz
+<span class="w"> </span>unxz<span class="w"> </span>./2025-12-04-raspios-trixie-arm64-lite.img.xz
 </pre></div>
 </div>
 </li>
 <li><p>Use <code class="docutils literal notranslate"><span class="pre">dd</span></code> to write the Raspberry Pi OS image to the microSD card. Replace <code class="docutils literal notranslate"><span class="pre">/dev/sdX</span></code> with the actual device name of your microSD card. Be very careful with this command as it will overwrite the specified device.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>dd<span class="w"> </span><span class="k">if</span><span class="o">=</span>./2025-12-04-raspios-trixie-arm64.img<span class="w"> </span><span class="nv">of</span><span class="o">=</span>/dev/sdX<span class="w"> </span><span class="nv">bs</span><span class="o">=</span>4M<span class="w"> </span><span class="nv">status</span><span class="o">=</span>progress<span class="w"> </span><span class="nv">conv</span><span class="o">=</span>fsync
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>dd<span class="w"> </span><span class="k">if</span><span class="o">=</span>./2025-12-04-raspios-trixie-arm64-lite.img<span class="w"> </span><span class="nv">of</span><span class="o">=</span>/dev/sdX<span class="w"> </span><span class="nv">bs</span><span class="o">=</span>4M<span class="w"> </span><span class="nv">status</span><span class="o">=</span>progress<span class="w"> </span><span class="nv">conv</span><span class="o">=</span>fsync
 </pre></div>
 </div>
 </li>
@@ -507,6 +529,7 @@
 </section>
 <section id="step-2-configure-the-raspberry-pi-os-image">
 <h2>Step 2 Configure the Raspberry Pi OS Image<a class="headerlink" href="#step-2-configure-the-raspberry-pi-os-image" title="Link to this heading">#</a></h2>
+<p>IMPORTANT: These steps must be done before the first boot of the Raspberry Pi. The files we set up here are only read by the Raspberry Pi during its first boot.</p>
 <ol class="arabic">
 <li><p>Mount the microSD card boot partition. Replace <code class="docutils literal notranslate"><span class="pre">/dev/sdX1</span></code> with the actual device name of the boot partition of your microSD card.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mkdir<span class="w"> </span>sdcard-bootfs
@@ -540,7 +563,6 @@ rmdir<span class="w"> </span>sdcard-bootfs
 </pre></div>
 </div>
 </li>
-<li><p>NOTE: the static IP configuration above must be undone before making a production image to be used on multiple Raspberry Pis. Instead we want the image to use DHCP only and be isolated from the internet.</p></li>
 </ol>
 </section>
 <section id="step-3-first-boot-and-connect-to-internet">
@@ -549,7 +571,7 @@ rmdir<span class="w"> </span>sdcard-bootfs
 <li><p>Insert the microSD card into your Raspberry Pi and power it on.</p></li>
 <li><p>Your options for connecting to the Raspberry Pi are:</p>
 <ul class="simple">
-<li><p>Connect a monitor and keyboard to the Raspberry Pi directly.</p></li>
+<li><p>Connect a monitor and keyboard to the Raspberry Pi directly. This is not available if you are using the ‘Lite’ version and requires a microHDMI to HDMI cable and a monitor.</p></li>
 <li><p>Connect via SSH to the Raspberry Pi’s IP address. The username is <code class="docutils literal notranslate"><span class="pre">local</span></code> and the password is <code class="docutils literal notranslate"><span class="pre">local</span></code>. If you have access to your router then it will show the Raspberry Pi’s IP address in its connected devices list. The best alternative is to set a fixed IP in the boot configuration as described above.</p></li>
 </ul>
 </li>
@@ -562,9 +584,10 @@ rmdir<span class="w"> </span>sdcard-bootfs
 <li><p>ping google.com to check internet access (try <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">reboot</span></code> if it does not work immediately)</p></li>
 </ul>
 </li>
-<li><p>Once connected, update the package lists and upgrade installed packages.</p>
+<li><p>Once connected, update the package lists and upgrade installed packages, plus get vim and git.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>update
 sudo<span class="w"> </span>apt<span class="w"> </span>upgrade<span class="w"> </span>-y
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>git<span class="w"> </span>vim
 </pre></div>
 </div>
 </li>
@@ -632,6 +655,7 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>status<span class="
 </section>
 <section id="step-6-image-backup">
 <h2>Step 6 image-backup<a class="headerlink" href="#step-6-image-backup" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">image-backup</span></code> is a utility to create backup images of Raspberry Pi sdcards. It does clever stuff like minimizing the size of the image and expanding the filesystem on first boot of copies of the image. See <a class="reference external" href="https://forums.raspberrypi.com/viewtopic.php?t=332000">https://forums.raspberrypi.com/viewtopic.php?t=332000</a> for more details.</p>
 <ol class="arabic">
 <li><p>Clone the image-backup repository.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>~
@@ -667,62 +691,85 @@ sudo<span class="w"> </span>vim<span class="w"> </span>/boot/firmware/cmdline.tx
 </li>
 </ol>
 </section>
-<section id="step-8-create-a-backup-image-of-the-microsd-card">
-<h2>Step 8 Create a Backup Image of the microSD Card<a class="headerlink" href="#step-8-create-a-backup-image-of-the-microsd-card" title="Link to this heading">#</a></h2>
-<p>Before backing up the image we put the SD card into read-only mode. This avoids wearing out the SD card and makes the Pi reset to a clean state on each boot.</p>
+<section id="step-8-prepare-the-backup-image-for-distribution">
+<h2>Step 8 Prepare the Backup Image for Distribution<a class="headerlink" href="#step-8-prepare-the-backup-image-for-distribution" title="Link to this heading">#</a></h2>
+<p>The image file you will create will remove the empty space in the root partition to make it nice and small. This makes it much quicker to copy to new microSD cards.</p>
+<p>For this reason we need to set up a script that will run once on the first boot of any copies of the image made from this master sdcard.</p>
+<p>The run once script will:</p>
+<ul class="simple">
+<li><p>expand the root filesystem to fill the sdcard</p></li>
+<li><p>enable read-only mode.</p></li>
+</ul>
+<p>Read-only mode uses overlayfs in RAM to avoid wearing out the sdcard and makes the Pi reset to a clean state on each boot.</p>
 <ol class="arabic">
-<li><p>Set the SD card to read-only mode with an overlay filesystem in RAM.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>raspi-config<span class="w"> </span>nonint<span class="w"> </span>do_overlayfs<span class="w"> </span><span class="m">0</span>
-<span class="c1"># DO NOT reboot until the backup image has been created</span>
-<span class="c1"># ALSO: ignore warnings about fstab has been modifiedsyn</span>
+<li><p>Set up a run once service for first boot of copies of the image.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;[Unit]</span>
+<span class="s1">Description=Run script once on next boot</span>
+<span class="s1">ConditionPathExists=/var/local/runonce.sh</span>
+<span class="s1">After=multi-user.target</span>
+
+<span class="s1">[Service]</span>
+<span class="s1">Type=oneshot</span>
+<span class="s1">ExecStart=/bin/bash /var/local/runonce.sh</span>
+
+<span class="s1">[Install]</span>
+<span class="s1">WantedBy=multi-user.target</span>
+<span class="s1">&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/systemd/system/runonce.service
+sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>runonce.service
 </pre></div>
 </div>
 </li>
+<li><p>Create the <code class="docutils literal notranslate"><span class="pre">runonce.sh</span></code> script to expand the root filesystem and enable read-only mode.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;#!/bin/bash</span>
+<span class="s1">set -x</span>
+
+<span class="s1"># Disable this script from running again</span>
+<span class="s1">mv /var/local/runonce.sh /var/local/runonce.sh.done</span>
+
+<span class="s1"># disable services that will report errors when in RO mode</span>
+<span class="s1">systemctl mask dphys-swapfile.service</span>
+<span class="s1">systemctl mask systemd-zram-setup@zram0.service</span>
+
+<span class="s1"># enable read only overlay mode</span>
+<span class="s1">raspi-config nonint do_overlayfs 0</span>
+
+<span class="s1"># reboot to pick up the change</span>
+<span class="s1">sync; reboot</span>
+<span class="s1">&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>/var/local/runonce.sh
+
+<span class="c1"># Add packages required for read-only mode</span>
+sudo<span class="w"> </span>apt-get<span class="w"> </span>-y<span class="w"> </span>install<span class="w"> </span>cryptsetup<span class="w"> </span>cryptsetup-bin<span class="w"> </span>overlayroot
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="step-9-create-a-backup-image-of-the-microsd-card">
+<h2>Step 9 Create a Backup Image of the microSD Card<a class="headerlink" href="#step-9-create-a-backup-image-of-the-microsd-card" title="Link to this heading">#</a></h2>
+<p>Before backing up the image we put the SD card into read-only mode. This avoids wearing out the SD card and makes the Pi reset to a clean state on each boot.</p>
+<ol class="arabic simple">
 <li><p>Insert a USB stick into the Raspberry Pi to store the backup image.</p></li>
-<li><p>use <code class="docutils literal notranslate"><span class="pre">lsblk</span></code> to identify the device name of the USB stick 1st partition (e.g. <code class="docutils literal notranslate"><span class="pre">/dev/sda1</span></code>). It should already be mounted under <code class="docutils literal notranslate"><span class="pre">/media/local/xxxx</span></code>. If there is no mount then create a mount point and mount it manually:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/media/local/usb
-sudo<span class="w"> </span>mount<span class="w"> </span>/dev/sda1<span class="w"> </span>/media/local/usb
-</pre></div>
-</div>
-</li>
-<li><p>Run the image-backup script to create a backup image of the microSD card to the USB stick. Replace <code class="docutils literal notranslate"><span class="pre">/media/local/xxxx</span></code> with the actual mount point of your USB stick and adjust the output file path as needed.</p>
+<li><p>use <code class="docutils literal notranslate"><span class="pre">lsblk</span></code> to identify the device name of the USB stick 1st partition which will normally be <code class="docutils literal notranslate"><span class="pre">/dev/sda1</span></code>. Mount the</p></li>
+</ol>
+<p>USB stick at <code class="docutils literal notranslate"><span class="pre">/media/local/usb</span></code>:
+<code class="docutils literal notranslate"><span class="pre">bash</span>&#160;&#160;&#160;&#160; <span class="pre">sudo</span> <span class="pre">mkdir</span> <span class="pre">-p</span> <span class="pre">/media/local/usb</span>&#160;&#160;&#160;&#160; <span class="pre">sudo</span> <span class="pre">mount</span> <span class="pre">/dev/sda1</span> <span class="pre">/media/local/usb</span>&#160;&#160;&#160;&#160; </code></p>
+<ol class="arabic">
+<li><p>Run the image-backup script to create a backup image of the microSD card to the USB stick. Rplace the output file name with something appropriate including the version of usb-remote.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>image-backup
 <span class="c1"># when promted for output file, use something like:</span>
-/media/local/usb/raspi-usb-remote-2025.12.20.img
+/media/local/usb/raspi-lite-usb-remote-2.1.0.img
 <span class="c1"># choose the defaults for the other prompts and y to confirm file creation.</span>
 </pre></div>
 </div>
 </li>
 <li><p>sync and unmount the USB stick.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sync
-sudo<span class="w"> </span>umount<span class="w"> </span>/media/local/xxxx
+sudo<span class="w"> </span>umount<span class="w"> </span>/media/local/usb
 </pre></div>
 </div>
 </li>
-<li><p>You can now power off the Raspberry Pi and remove the USB stick.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>poweroff
-</pre></div>
-</div>
-</li>
+<li><p>You can now remove the USB stick.</p></li>
 </ol>
-</section>
-<section id="step-9-prepare-the-backup-image-for-distribution">
-<h2>Step 9 Prepare the Backup Image for Distribution<a class="headerlink" href="#step-9-prepare-the-backup-image-for-distribution" title="Link to this heading">#</a></h2>
-<p>The image file you have created has removed the empty space in the root partition to make it nice and small. The contents of boot partition must be updated to tell the Raspberry Pi to expand the root partition to fill the microSD card on first boot. The <code class="docutils literal notranslate"><span class="pre">pi-shrink</span></code> script does this for you.</p>
-<ol class="arabic">
-<li><p>Get the <code class="docutils literal notranslate"><span class="pre">pi-shrink</span></code> script.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-fsSO<span class="w"> </span>https://raw.githubusercontent.com/Drewsif/PiShrink/master/pishrink.sh
-chmod<span class="w"> </span>+x<span class="w"> </span>pishrink.sh
-</pre></div>
-</div>
-</li>
-<li><p>Run <code class="docutils literal notranslate"><span class="pre">pi-shrink</span></code> on the backup image you created in Step 8.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>./pishrink.sh<span class="w"> </span>/path/to/your/raspi-usb-remote-2025.12.20.img
-</pre></div>
-</div>
-</li>
-</ol>
-<p>You can ignore the warning “Filesystem already shrunk to smallest size. Skipping filesystem shrinking”.</p>
 <p>That’s it. Your img file can now be used to create additional Raspberry Pi usb-remote servers as needed.</p>
 </section>
 <section id="conclusion">
@@ -783,6 +830,7 @@ chmod<span class="w"> </span>+x<span class="w"> </span>pishrink.sh
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#introduction">Introduction</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#options">Options</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-1-image-the-microsd-card-with-raspberry-pi-os">Step 1 Image the microSD Card with Raspberry Pi OS</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-2-configure-the-raspberry-pi-os-image">Step 2 Configure the Raspberry Pi OS Image</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-3-first-boot-and-connect-to-internet">Step 3 First Boot and Connect to Internet</a></li>
@@ -790,8 +838,8 @@ chmod<span class="w"> </span>+x<span class="w"> </span>pishrink.sh
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-5-install-usb-remote">Step 5 Install usb-remote</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-6-image-backup">Step 6 image-backup</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-7-clean-up-the-settings-for-production">Step 7 Clean Up The Settings for Production</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-8-create-a-backup-image-of-the-microsd-card">Step 8 Create a Backup Image of the microSD Card</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-9-prepare-the-backup-image-for-distribution">Step 9 Prepare the Backup Image for Distribution</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-8-prepare-the-backup-image-for-distribution">Step 8 Prepare the Backup Image for Distribution</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-9-create-a-backup-image-of-the-microsd-card">Step 9 Create a Backup Image of the microSD Card</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#conclusion">Conclusion</a></li>
 </ul>
   </nav></div>

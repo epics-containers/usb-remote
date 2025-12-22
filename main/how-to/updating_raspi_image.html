@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Updating an Existing Raspberry Pi Boot Image &#8212; usb-remote 2.0.1.dev4+ga585289d8 documentation</title>
+    <title>Updating an Existing Raspberry Pi Boot Image &#8212; usb-remote 2.1.1.dev1+ge1c7651df documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=c5a59493"></script>
+    <script src="../_static/documentation_options.js?v=fe9bba88"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -465,7 +465,26 @@
                   
   <section id="updating-an-existing-raspberry-pi-boot-image">
 <h1>Updating an Existing Raspberry Pi Boot Image<a class="headerlink" href="#updating-an-existing-raspberry-pi-boot-image" title="Link to this heading">#</a></h1>
-<p>TODO: Write this page.</p>
+<p>To upgrade the version of usb-remote or other software on an existing Raspberry Pi boot image, you can follow these steps.</p>
+<ol class="arabic">
+<li><p>Boot up a Raspberry Pi using the existing microSD card image. Make sure you have network connectivity so you can ssh into the Pi.</p></li>
+<li><p>SSH into the Raspberry Pi. The default username is <code class="docutils literal notranslate"><span class="pre">local</span></code> and the default password is <code class="docutils literal notranslate"><span class="pre">local</span></code>.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ssh<span class="w"> </span>local@&lt;raspberry_pi_ip_address&gt;
+</pre></div>
+</div>
+</li>
+<li><p>restore the root file system to writeable mode:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>mount<span class="w"> </span>-o<span class="w"> </span>remount,rw<span class="w"> </span>/
+</pre></div>
+</div>
+</li>
+<li><p>Update the (root) version of usb-remote:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>/home/local/.local/bin/uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>usb-remote<span class="o">==</span><span class="m">2</span>.1.0<span class="w"> </span>--upgrade
+</pre></div>
+</div>
+</li>
+</ol>
+<p>TODO complete this page.</p>
 </section>
 
 

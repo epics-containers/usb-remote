@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Commissioning a new Raspberry Pi as a usb-remote Server &#8212; usb-remote 2.0.1.dev4+ga585289d8 documentation</title>
+    <title>Commissioning a new Raspberry Pi as a usb-remote Server &#8212; usb-remote 2.1.1.dev1+ge1c7651df documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=c5a59493"></script>
+    <script src="../_static/documentation_options.js?v=fe9bba88"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -483,14 +483,14 @@
 <li><p>Obtain the latest Raspberry Pi usb-remote server image.</p>
 <ul class="simple">
 <li><p>At DLS this is available at /dls_sw/apps TODO: add path here.</p></li>
-<li><p>giles’ latest image can be downloaded from here: https://drive.google.com/file/d/1pvCIkpnDC90Z086w6k2WjTKtdAcx9RPU/view?usp=sharing</p></li>
+<li><p>giles’ latest image can be downloaded from here: <a class="reference external" href="https://drive.google.com/file/d/1zlAM9k-y9gVM7K47EDJZKzh3DB3L_1QD/view?usp=sharing">raspi-lite-usb-remote-2.1.0.img on Google Drive</a></p></li>
 <li><p>Alternatively, build your own image using the instructions at <a class="reference internal" href="../how-to/new_raspi.html"><span class="std std-doc">Create a New Raspberry Pi Boot Image From Scratch</span></a>.</p></li>
 </ul>
 </li>
 <li><p>Insert a microSD card of at least 16GB capacity into a card reader connected to your computer.</p></li>
 <li><p>Use <code class="docutils literal notranslate"><span class="pre">lsblk</span></code> to identify the device name of the microSD card (e.g. <code class="docutils literal notranslate"><span class="pre">/dev/sdb</span></code>).</p></li>
 <li><p>Flash the image to a microSD card. <strong>CAREFUL</strong> - replace <code class="docutils literal notranslate"><span class="pre">/dev/sdX</span></code> with the correct device name for your microSD card and remember that this will overwrite the specified device.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>dd<span class="w"> </span><span class="k">if</span><span class="o">=</span>./raspberry_pi_usb-remote_server.img<span class="w"> </span><span class="nv">of</span><span class="o">=</span>/dev/sdX<span class="w"> </span><span class="nv">bs</span><span class="o">=</span>4M<span class="w"> </span><span class="nv">status</span><span class="o">=</span>progress<span class="w"> </span><span class="nv">conv</span><span class="o">=</span>fsync
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>dd<span class="w"> </span><span class="k">if</span><span class="o">=</span>./raspi-lite-usb-remote-2.1.0.img<span class="w"> </span><span class="nv">of</span><span class="o">=</span>/dev/sdX<span class="w"> </span><span class="nv">bs</span><span class="o">=</span>4M<span class="w"> </span><span class="nv">status</span><span class="o">=</span>progress<span class="w"> </span><span class="nv">conv</span><span class="o">=</span>fsync
 </pre></div>
 </div>
 </li>
@@ -514,6 +514,7 @@
 <ul class="simple">
 <li><p>Connect the Raspberry Pi to the network using a wired ethernet connection.</p></li>
 <li><p>Power on the Raspberry Pi using the USB-C power supply.</p></li>
+<li><p>Wait a few minutes as the Pi will reboot twice to expand the root filesystem and set up read-only filesystem mode.</p></li>
 </ul>
 </section>
 <section id="step-6-verify-the-new-server-is-visible-to-the-usb-remote-client">
