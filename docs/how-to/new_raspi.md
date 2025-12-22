@@ -255,6 +255,7 @@ Read-only mode uses overlayfs in RAM to avoid wearing out the sdcard and makes t
     sudo apt-get -y install cryptsetup cryptsetup-bin overlayroot
     ```
 
+(step-9-create-a-backup-image-of-the-microsd-card)=
 ## Step 9 Create a Backup Image of the microSD Card
 
 Before backing up the image we put the SD card into read-only mode. This avoids wearing out the SD card and makes the Pi reset to a clean state on each boot.

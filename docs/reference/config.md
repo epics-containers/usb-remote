@@ -35,4 +35,4 @@ servers:
 timeout: 5.0
 ```
 
-See [usb-remote.config.example](/usb-remote.config.example) for a sample configuration file.
+See [usb-remote.config.example](../../usb-remote.config.example) for a sample configuration file.

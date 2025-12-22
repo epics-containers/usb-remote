@@ -63,3 +63,7 @@ usb-remote detach --serial=5072D8DF
 ## Architecture
 
 See the [Architecture Reference](./reference/architecture.md) for full details.
+
+<!-- README only content. Anything below this line won't be included in index.md -->
+
+See https://epics-containers.github.io/usb-remote for more detailed documentation.

@@ -28,4 +28,4 @@ To upgrade the version of usb-remote or other software on an existing Raspberry 
    sudo cp /var/local/runonce.sh.done /var/local/runonce.sh
    ```
 
-1. Create a new img file using these instructions: [Step 9](../how-to/new_raspi.md#step-9-create-a-backup-image-of-the-microsd-card).
+1. Create a new img file using these instructions: {ref}`step-9-create-a-backup-image-of-the-microsd-card`.
