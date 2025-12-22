@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Recommened Hardware &#8212; usb-remote 2.1.1.dev3+gb12be2c23 documentation</title>
+    <title>Recommend Server Hardware &#8212; usb-remote 2.1.1.dev4+gf9d719383 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=1b591ab7"></script>
+    <script src="../_static/documentation_options.js?v=a46aeb20"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -58,7 +58,7 @@
     <link rel="icon" href="../_static/dls-logo.svg"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="usb_remote" href="../_api/usb_remote.html" />
+    <link rel="next" title="Client Configuration File" href="config.html" />
     <link rel="prev" title="Reference" href="../reference.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -397,7 +397,9 @@
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Recommened Hardware</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Recommend Server Hardware</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">Client Configuration File</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">usb-remote Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../_api/usb_remote.html">API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/epics-containers/usb-remote/releases">Release Notes</a></li>
@@ -444,7 +446,7 @@
     
     <li class="breadcrumb-item"><a href="../reference.html" class="nav-link">Reference</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Recommened Hardware</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Recommend Server Hardware</span></li>
   </ul>
 </nav>
 </div>
@@ -461,9 +463,36 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="recommened-hardware">
-<h1>Recommened Hardware<a class="headerlink" href="#recommened-hardware" title="Link to this heading">#</a></h1>
-<p>TODO: Write this page.</p>
+  <section id="recommend-server-hardware">
+<h1>Recommend Server Hardware<a class="headerlink" href="#recommend-server-hardware" title="Link to this heading">#</a></h1>
+<p>This hardware has been tested at DLS and is known to work well as a usb-remote server.</p>
+<p>If you choose this hardware then a pre-configured Raspberry Pi usb-remote server image is available to download, see the <a class="reference internal" href="../tutorials/commissioning_raspi.html"><span class="std std-doc">Raspberry Pi Commissioning Guide</span></a>.</p>
+<section id="raspberry-pi-5-8gb-ram">
+<h2>Raspberry Pi 5 8GB RAM<a class="headerlink" href="#raspberry-pi-5-8gb-ram" title="Link to this heading">#</a></h2>
+<p>Raspberry 4 is also suitable, I have also found 2GB RAM models to work fine.</p>
+<p><img alt="Raspberry Pi 5" src="../_images/pi5.png" /></p>
+</section>
+<section id="microsd-card-16gb">
+<h2>MicroSD Card 16GB<a class="headerlink" href="#microsd-card-16gb" title="Link to this heading">#</a></h2>
+<p>e.g. SanDisk Ultra 16GB or larger.</p>
+<p><img alt="SanDisk Ultra" src="../_images/sandisk.png" /></p>
+</section>
+<section id="high-quality-passively-cooled-case">
+<h2>High Quality Passively Cooled Case<a class="headerlink" href="#high-quality-passively-cooled-case" title="Link to this heading">#</a></h2>
+<p>e.g.Geekworm Raspberry Pi 5 Case (P573)</p>
+<p><img alt="Geekworm Case" src="../_images/pi-case.png" /></p>
+</section>
+<section id="power-supply">
+<h2>Power Supply<a class="headerlink" href="#power-supply" title="Link to this heading">#</a></h2>
+<p>Official Raspberry Pi 27W USB-C Power Supply</p>
+<p><img alt="Raspberry Pi Power Supply" src="../_images/raspi-ps.png" /></p>
+</section>
+<section id="alternative-power-supply">
+<h2>Alternative Power Supply<a class="headerlink" href="#alternative-power-supply" title="Link to this heading">#</a></h2>
+<p>If you plan on running a number of Pis. Then a modern GAN USB-C Power Delivery power supply with multiple ports is a good alternative. Make sure it can provide at least 5A at 5V per Pi.</p>
+<p>e.g. Ugreen Nexode 200w</p>
+<p><img alt="Ugreen Nexode" src="../_images/ugreen-ps.png" /></p>
+</section>
 </section>
 
 
@@ -486,11 +515,11 @@
       </div>
     </a>
     <a class="right-next"
-       href="../_api/usb_remote.html"
+       href="config.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title"><code class="docutils literal notranslate"><span class="pre">usb_remote</span></code></p>
+        <p class="prev-next-title">Client Configuration File</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -504,6 +533,22 @@
                 <dialog id="pst-secondary-sidebar-modal"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#raspberry-pi-5-8gb-ram">Raspberry Pi 5 8GB RAM</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#microsd-card-16gb">MicroSD Card 16GB</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#high-quality-passively-cooled-case">High Quality Passively Cooled Case</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#power-supply">Power Supply</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#alternative-power-supply">Alternative Power Supply</a></li>
+</ul>
+  </nav></div>
 
   <div class="sidebar-secondary-item">
 

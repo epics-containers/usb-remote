@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>usb-remote &#8212; usb-remote 2.1.1.dev3+gb12be2c23 documentation</title>
+    <title>usb-remote &#8212; usb-remote 2.1.1.dev4+gf9d719383 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=1b591ab7"></script>
+    <script src="_static/documentation_options.js?v=a46aeb20"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -431,7 +431,7 @@
 </thead>
 <tbody>
 <tr class="row-even"><td class="text-center"><p>PyPI</p></td>
-<td class="text-center"><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">usb-remote</span></code></p></td>
+<td class="text-center"><p><code class="docutils literal notranslate"><span class="pre">uvx</span> <span class="pre">usb-remote</span> <span class="pre">--version</span></code></p></td>
 </tr>
 <tr class="row-odd"><td class="text-center"><p>Docker</p></td>
 <td class="text-center"><p><code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">run</span> <span class="pre">ghcr.io/epics-containers/usb-remote:latest</span></code></p></td>
@@ -445,73 +445,37 @@
 </tbody>
 </table>
 </div>
-<section id="multi-server-configuration">
-<h2>Multi-Server Configuration<a class="headerlink" href="#multi-server-configuration" title="Link to this heading">#</a></h2>
-<p>You can configure <code class="docutils literal notranslate"><span class="pre">usb-remote</span></code> to scan multiple USB device servers automatically. The client discovers configuration files in the following priority order:</p>
-<ol class="arabic simple">
-<li><p><strong>Environment variable</strong>: <code class="docutils literal notranslate"><span class="pre">USB_REMOTE_CONFIG=/path/to/config.yaml</span></code></p></li>
-<li><p><strong>Project-local config</strong>: <code class="docutils literal notranslate"><span class="pre">.usb-remote.config</span></code> in current directory</p></li>
-<li><p><strong>User config</strong>: <code class="docutils literal notranslate"><span class="pre">~/.config/usb-remote/usb-remote.config</span></code> (default)</p></li>
-</ol>
-<p>Create a configuration file with the following format:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">servers</span><span class="p">:</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">localhost</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">raspberrypi</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.1.100</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">usb-server-1.local</span>
-
-<span class="c1"># Optional: Connection timeout in seconds (default: 5.0)</span>
-<span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5.0</span>
-</pre></div>
-</div>
-<p>See <code class="docutils literal notranslate"><span class="pre">usb-remote.config.example</span></code> for a sample configuration file.</p>
-<section id="config-file-discovery-examples">
-<h3>Config File Discovery Examples<a class="headerlink" href="#config-file-discovery-examples" title="Link to this heading">#</a></h3>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Use default config from ~/.config/usb-remote/usb-remote.config</span>
-usb-remote<span class="w"> </span>list
-
-<span class="c1"># Use project-specific config from current directory</span>
-<span class="nb">cd</span><span class="w"> </span>/path/to/project
-<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;servers: [myserver]&quot;</span><span class="w"> </span>&gt;<span class="w"> </span>.usb-remote.config
-usb-remote<span class="w"> </span>list
-
-<span class="c1"># Use environment variable (useful in CI/CD)</span>
-<span class="nb">export</span><span class="w"> </span><span class="nv">USB_REMOTE_CONFIG</span><span class="o">=</span>/etc/usb-remote/production.config
-usb-remote<span class="w"> </span>list
-</pre></div>
-</div>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">usb-remote</span></code> allows USB devices to be very easily shared over a network using the linux usbip service. A <code class="docutils literal notranslate"><span class="pre">usb-remote</span></code> server runs on a machine with physical USB devices attached, and clients can connect to the server to access and control those devices as if they were locally connected.</p>
 </section>
-<section id="connection-timeout">
-<h3>Connection Timeout<a class="headerlink" href="#connection-timeout" title="Link to this heading">#</a></h3>
-<p>The <code class="docutils literal notranslate"><span class="pre">timeout</span></code> setting controls how long to wait when connecting to each server before giving up. This prevents the client from hanging when a server is unreachable. The default is 5 seconds, but you can adjust it based on your network conditions:</p>
+<section id="comparison-to-digi-s-anywhereusb">
+<h2>Comparison to Digi’s AnyWhereUSB<a class="headerlink" href="#comparison-to-digi-s-anywhereusb" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">usb-remote</span></code> is an FOSS alternative to commercial USB-over-Ethernet solutions like Digi’s AnyWhereUSB.</p>
+<p>Advantages of Digi’s AnyWhereUSB:</p>
 <ul class="simple">
-<li><p><strong>Fast local network</strong>: Use a shorter timeout (e.g., <code class="docutils literal notranslate"><span class="pre">2.0</span></code> seconds)</p></li>
-<li><p><strong>Slow or remote servers</strong>: Use a longer timeout (e.g., <code class="docutils literal notranslate"><span class="pre">10.0</span></code> seconds)</p></li>
+<li><p>Commercial product with support and warranty</p></li>
+<li><p>Dedicated hardware servers for USB device sharing</p></li>
+<li><p>Excellent security features controlling access to USB devices</p></li>
 </ul>
-<p>When a server times out, it’s logged as a warning and skipped, allowing other servers to be queried.</p>
-</section>
-<section id="behavior">
-<h3>Behavior<a class="headerlink" href="#behavior" title="Link to this heading">#</a></h3>
+<p>Advantages of <code class="docutils literal notranslate"><span class="pre">usb-remote</span></code>:</p>
 <ul class="simple">
-<li><p><strong>list</strong>: Without <code class="docutils literal notranslate"><span class="pre">--host</span></code>, queries all configured servers and displays devices grouped by server</p></li>
-<li><p><strong>attach/detach</strong>: Without <code class="docutils literal notranslate"><span class="pre">--host</span></code>, scans all servers to find a matching device</p>
-<ul>
-<li><p>Fails if no match is found across all servers</p></li>
-<li><p>Fails if multiple matches are found across different servers (unless <code class="docutils literal notranslate"><span class="pre">--first</span></code> is used)</p></li>
-<li><p>Succeeds if exactly one match is found (reports which server it was found on)</p></li>
-<li><p>With <code class="docutils literal notranslate"><span class="pre">--first</span></code> flag: Attaches the first matching device found, even if multiple servers have matching devices</p></li>
-</ul>
-</li>
-<li><p><strong>–host flag</strong>: When specified, only queries that specific server (ignores config file)</p></li>
+<li><p>Good support for UVC isochronous Webcams that do not work with AnyWhereUSB</p></li>
+<li><p>Very simple to setup and use in trusted network environments</p></li>
+<li><p>Free and open source software (FOSS)</p></li>
+<li><p>The server runs on standard hardware such as a $55 Raspberry Pi</p></li>
 </ul>
 </section>
-<section id="examples">
-<h3>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h3>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
+<p>See the <a class="reference internal" href="how-to/server_setup.html"><span class="std std-doc">Server Setup</span></a> and <a class="reference internal" href="how-to/client_setup.html"><span class="std std-doc">Client Setup</span></a> guides for installation instructions.</p>
+<section id="example-client-commands">
+<h3>Example Client Commands<a class="headerlink" href="#example-client-commands" title="Link to this heading">#</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># List devices on all configured servers</span>
 usb-remote<span class="w"> </span>list
 
 <span class="c1"># List devices on a specific server</span>
-usb-remote<span class="w"> </span>list<span class="w"> </span>--host<span class="w"> </span>raspberrypi
+usb-remote<span class="w"> </span>list<span class="w"> </span>--host<span class="w"> </span>raspberrypi1
 
 <span class="c1"># Attach a device (scans all servers, fails if multiple matches)</span>
 usb-remote<span class="w"> </span>attach<span class="w"> </span>--desc<span class="w"> </span><span class="s2">&quot;Camera&quot;</span>
@@ -519,63 +483,18 @@ usb-remote<span class="w"> </span>attach<span class="w"> </span>--desc<span clas
 <span class="c1"># Attach first matching device across servers</span>
 usb-remote<span class="w"> </span>attach<span class="w"> </span>--desc<span class="w"> </span><span class="s2">&quot;Camera&quot;</span><span class="w"> </span>--first
 
-<span class="c1"># Attach a device from a specific server</span>
-usb-remote<span class="w"> </span>attach<span class="w"> </span>--desc<span class="w"> </span><span class="s2">&quot;Camera&quot;</span><span class="w"> </span>--host<span class="w"> </span><span class="m">192</span>.168.1.100
+<span class="c1"># Attach a device based on serial number - recommended for guaranteed unique match</span>
+usb-remote<span class="w"> </span>attach<span class="w"> </span>--serial<span class="o">=</span>5072D8DF
 
-<span class="c1"># Detach with first match (if same device attached from multiple servers)</span>
-usb-remote<span class="w"> </span>detach<span class="w"> </span>--desc<span class="w"> </span><span class="s2">&quot;Camera&quot;</span><span class="w"> </span>--first
+<span class="c1"># Detach a device</span>
+usb-remote<span class="w"> </span>detach<span class="w"> </span>--serial<span class="o">=</span>5072D8DF
 </pre></div>
 </div>
 </section>
 </section>
-<section id="installing-as-a-service">
-<h2>Installing as a Service<a class="headerlink" href="#installing-as-a-service" title="Link to this heading">#</a></h2>
-<p>You can install the usb-remote server as a systemd service to run automatically at boot.</p>
-<section id="system-service-recommended">
-<h3>System Service (Recommended)<a class="headerlink" href="#system-service-recommended" title="Link to this heading">#</a></h3>
-<p>Install as a system service (runs at boot, before login):</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install as system service (requires sudo)</span>
-sudo<span class="w"> </span>usb-remote<span class="w"> </span>install-service<span class="w"> </span>--system
-
-<span class="c1"># Enable and start</span>
-sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>usb-remote.service
-sudo<span class="w"> </span>systemctl<span class="w"> </span>start<span class="w"> </span>usb-remote.service
-
-<span class="c1"># Check status</span>
-sudo<span class="w"> </span>systemctl<span class="w"> </span>status<span class="w"> </span>usb-remote.service
-</pre></div>
-</div>
-</section>
-<section id="user-service-not-recommended">
-<h3>User Service (Not Recommended)<a class="headerlink" href="#user-service-not-recommended" title="Link to this heading">#</a></h3>
-<p>Install as a user service (runs when you log in) useful for testing if you don’t have sudo access:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install the service</span>
-usb-remote<span class="w"> </span>install-service
-
-<span class="c1"># Enable it to start on login</span>
-systemctl<span class="w"> </span>--user<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>usb-remote.service
-
-<span class="c1"># Start the service now</span>
-systemctl<span class="w"> </span>--user<span class="w"> </span>start<span class="w"> </span>usb-remote.service
-
-<span class="c1"># Check status</span>
-systemctl<span class="w"> </span>--user<span class="w"> </span>status<span class="w"> </span>usb-remote.service
-
-<span class="c1"># View logs</span>
-journalctl<span class="w"> </span>--user<span class="w"> </span>-u<span class="w"> </span>usb-remote.service<span class="w"> </span>-f
-</pre></div>
-</div>
-</section>
-<section id="uninstalling">
-<h3>Uninstalling<a class="headerlink" href="#uninstalling" title="Link to this heading">#</a></h3>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Uninstall user service</span>
-usb-remote<span class="w"> </span>uninstall-service
-
-<span class="c1"># Uninstall system service (requires sudo)</span>
-sudo<span class="w"> </span>usb-remote<span class="w"> </span>uninstall-service<span class="w"> </span>--system
-</pre></div>
-</div>
-</section>
+<section id="architecture">
+<h2>Architecture<a class="headerlink" href="#architecture" title="Link to this heading">#</a></h2>
+<p>See the <a class="reference internal" href="reference/architecture.html"><span class="std std-doc">Architecture Reference</span></a> for full details.</p>
 </section>
 <section id="how-the-documentation-is-structured">
 <h2>How the documentation is structured<a class="headerlink" href="#how-the-documentation-is-structured" title="Link to this heading">#</a></h2>
@@ -592,7 +511,6 @@ sudo<span class="w"> </span>usb-remote<span class="w"> </span>uninstall-service<
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/commissioning_raspi.html">Commissioning a new Raspberry Pi as a usb-remote Server</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorials/installation.html">Installation</a></li>
 </ul>
 </li>
 </ul>
@@ -611,12 +529,12 @@ sudo<span class="w"> </span>usb-remote<span class="w"> </span>uninstall-service<
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="how-to.html">How-to Guides</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="how-to/QUICKSTART.html">USB_REMOTE Quick Start Guide</a></li>
-<li class="toctree-l2"><a class="reference internal" href="how-to/RASBERRYPI.html">Raspberry Pi</a></li>
-<li class="toctree-l2"><a class="reference internal" href="how-to/contribute.html">Contribute to the project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/client_setup.html">Client Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/server_setup.html">Server Setup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="how-to/new_raspi.html">Create a New Raspberry Pi Boot Image From Scratch</a></li>
-<li class="toctree-l2"><a class="reference internal" href="how-to/run-container.html">Run in a container</a></li>
 <li class="toctree-l2"><a class="reference internal" href="how-to/updating_raspi_image.html">Updating an Existing Raspberry Pi Boot Image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/run-container.html">Run in a container</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/contribute.html">Contribute to the project</a></li>
 </ul>
 </li>
 </ul>
@@ -654,7 +572,9 @@ sudo<span class="w"> </span>usb-remote<span class="w"> </span>uninstall-service<
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="reference/recommended_hardware.html">Recommened Hardware</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/recommended_hardware.html">Recommend Server Hardware</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/config.html">Client Configuration File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/architecture.html">usb-remote Architecture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/usb_remote.html">API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="genindex.html">Index</a></li>
 <li class="toctree-l2"><a class="reference external" href="https://github.com/epics-containers/usb-remote/releases">Release Notes</a></li>

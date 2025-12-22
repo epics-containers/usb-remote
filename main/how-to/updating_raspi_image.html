@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Updating an Existing Raspberry Pi Boot Image &#8212; usb-remote 2.1.1.dev3+gb12be2c23 documentation</title>
+    <title>Updating an Existing Raspberry Pi Boot Image &#8212; usb-remote 2.1.1.dev4+gf9d719383 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=1b591ab7"></script>
+    <script src="../_static/documentation_options.js?v=a46aeb20"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -58,8 +58,8 @@
     <link rel="icon" href="../_static/dls-logo.svg"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Explanations" href="../explanations.html" />
-    <link rel="prev" title="Run in a container" href="run-container.html" />
+    <link rel="next" title="Run in a container" href="run-container.html" />
+    <link rel="prev" title="Create a New Raspberry Pi Boot Image From Scratch" href="new_raspi.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="main" />
@@ -397,12 +397,12 @@
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="QUICKSTART.html">USB_REMOTE Quick Start Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="RASBERRYPI.html">Raspberry Pi</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contribute.html">Contribute to the project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="client_setup.html">Client Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="server_setup.html">Server Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="new_raspi.html">Create a New Raspberry Pi Boot Image From Scratch</a></li>
-<li class="toctree-l1"><a class="reference internal" href="run-container.html">Run in a container</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Updating an Existing Raspberry Pi Boot Image</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run-container.html">Run in a container</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contribute.html">Contribute to the project</a></li>
 </ul>
 </div>
 </nav></div>
@@ -465,7 +465,7 @@
                   
   <section id="updating-an-existing-raspberry-pi-boot-image">
 <h1>Updating an Existing Raspberry Pi Boot Image<a class="headerlink" href="#updating-an-existing-raspberry-pi-boot-image" title="Link to this heading">#</a></h1>
-<p>To upgrade the version of usb-remote or other software on an existing Raspberry Pi boot image, you can follow these steps.</p>
+<p>To upgrade the version of usb-remote or other software on an existing Raspberry Pi image, you can follow these steps.</p>
 <ol class="arabic">
 <li><p>Boot up a Raspberry Pi using the existing microSD card image. Make sure you have network connectivity so you can ssh into the Pi.</p></li>
 <li><p>SSH into the Raspberry Pi. The default username is <code class="docutils literal notranslate"><span class="pre">local</span></code> and the default password is <code class="docutils literal notranslate"><span class="pre">local</span></code>.</p>
@@ -474,7 +474,9 @@
 </div>
 </li>
 <li><p>restore the root file system to writeable mode:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>mount<span class="w"> </span>-o<span class="w"> </span>remount,rw<span class="w"> </span>/
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>raspi-config<span class="w"> </span>nonint<span class="w"> </span>do_expand_rootfs<span class="w"> </span><span class="m">1</span>
+<span class="c1"># on reboot the root fs will be writeable</span>
+sudo<span class="w"> </span>reboot
 </pre></div>
 </div>
 </li>
@@ -483,8 +485,14 @@
 </pre></div>
 </div>
 </li>
+<li><p>Make any other desired changes. e.g. delete the local user and add your own user/password.</p></li>
+<li><p>Restore <code class="docutils literal notranslate"><span class="pre">runonce.sh</span></code> to re-enable read-only filesystem mode on next boot:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>cp<span class="w"> </span>/var/local/runonce.sh.done<span class="w"> </span>/var/local/runonce.sh
+</pre></div>
+</div>
+</li>
+<li><p>Create a new img file using these instructions: <a class="reference internal" href="new_raspi.html#step-9-create-a-backup-image-of-the-microsd-card"><span class="std std-ref">Step 9 Create a Backup Image of the microSD Card</span></a>.</p></li>
 </ol>
-<p>TODO complete this page.</p>
 </section>
 
 
@@ -498,20 +506,20 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="run-container.html"
+       href="new_raspi.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Run in a container</p>
+        <p class="prev-next-title">Create a New Raspberry Pi Boot Image From Scratch</p>
       </div>
     </a>
     <a class="right-next"
-       href="../explanations.html"
+       href="run-container.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Explanations</p>
+        <p class="prev-next-title">Run in a container</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

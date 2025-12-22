@@ -80,7 +80,7 @@ IMPORTANT: These steps must be done before the first boot of the Raspberry Pi. T
     echo "local:$(echo local | openssl passwd -6 -stdin)" | sudo tee userconf.txt
     ```
 
-1. If you need a static IP address for wired ethernet, edit `firmware/cmdline.txt`.
+1. If you need a static IP address for wired ethernet, edit `cmdline.txt`.
     ```bash
     sudo vim /boot/cmdline.txt
     # add " ip=<your_static_ip_address>" at the end of the single line in the file.
@@ -126,10 +126,9 @@ IMPORTANT: These steps must be done before the first boot of the Raspberry Pi. T
 
 1. Add the kernel modules to `/etc/modules` so they load at boot.
     ```bash
-    echo "usbip_core
-    usbip_host" | sudo tee -a /etc/modules
     sudo modprobe usbip_core
     sudo modprobe usbip_host
+    echo -e "usbip-core\nusbip-host" | sudo tee /etc/modules-load.d/usbip.conf
     ```
 
 1. Install the `usbip` package.
@@ -256,6 +255,7 @@ Read-only mode uses overlayfs in RAM to avoid wearing out the sdcard and makes t
     sudo apt-get -y install cryptsetup cryptsetup-bin overlayroot
     ```
 
+(step-9-create-a-backup-image-of-the-microsd-card)=
 ## Step 9 Create a Backup Image of the microSD Card
 
 Before backing up the image we put the SD card into read-only mode. This avoids wearing out the SD card and makes the Pi reset to a clean state on each boot.

@@ -2,47 +2,46 @@
 
 ## Introduction
 
-To add remote USB device support requires a usb-remote server at the location of the USB devices. e.g. In a beamline's experimental hutch. This tutorial describes how to commission a new Raspberry Pi to act as a usb-remote server.
+Choosing the recommended hardware for a usb-remote server simplifies commissioning as there is a pre-built disk image available that includes all necessary software and configuration.
 
 
 ## Step 1: Obtain and Assemble Recommended Hardware
 
-See [Recommended Hardware](../reference/recommended_hardware.md) for the list of recommended hardware to use for a Raspberry Pi usb-remote server.
+See [Recommended Server Hardware](../reference/recommended_hardware.md).
 
 Any Raspberry Pi 4 or 5 with at least 4GB RAM and at least 16GB microSD card is suitable.
 
-TODO: some notes on assembly go here.
-
-## Step 2a: Obtain Raspberry Pi usb-remote Server microSD Card
-
-If you have a supply of pre-built Raspberry Pi usb-remote server sdcard images you can skip this step and go to `Step 3: Extract the Raspberry Pi MAC Address`.
-
-At DLS these can be obtained from TODO: where?
-
 ## Step 2b: Flash the Raspberry Pi usb-remote Server Image
 
-Alternatively, flash your own card.
+If you do not already have a pre-configured Raspberry Pi usb-remote server image, follow these steps to flash the image to a microSD card.
 
-1. Obtain the latest Raspberry Pi usb-remote server image.
-    - At DLS this is available at /dls_sw/apps TODO: add path here.
-    - giles' latest image can be downloaded from here: [raspi-lite-usb-remote-2.1.0.img on Google Drive][raspiImageLink]
-    - Alternatively, build your own image using the instructions at [Create a New Raspberry Pi Boot Image From Scratch](../how-to/new_raspi.md).
+1. Download [raspi-lite-usb-remote-2.1.0.img on Google Drive][raspiImageLink]
+  - TODO: make a separate image for DLS with different user/password and create a central supply of duplicates.
+
 1. Insert a microSD card of at least 16GB capacity into a card reader connected to your computer.
+
 1. Use `lsblk` to identify the device name of the microSD card (e.g. `/dev/sdb`).
-1. Flash the image to a microSD card. **CAREFUL** - replace `/dev/sdX` with the correct device name for your microSD card and remember that this will overwrite the specified device.
+
+1. Flash the image to a microSD card as follows. **CAREFUL** - replace `/dev/sdX` with the correct device name for your microSD card and remember that this will overwrite the specified device.
     ```bash
     sudo dd if=./raspi-lite-usb-remote-2.1.0.img of=/dev/sdX bs=4M status=progress conv=fsync
     ```
 
 ## Step 3: Extract the Raspberry Pi MAC Address
 
-- TODO: this will involve booting the Pi with a printer plugged in.
-- Alternatively, if you have access to a monitor and keyboard you can boot the Pi and run `ip link show eth0` to get the MAC address of the `eth0` interface.
-
+- If you have a label printer. Plug it in to the Raspberry Pi and power it on. After minute or so, it will print a label with the MAC address. (this feature is TODO!)
+- Otherwise you will need to boot the Raspberry Pi and get the MAC address from the command line.
+  ```bash
+  ip link show eth0
+  ```
 
 ## Step 4: Configure an IP Address for the Raspberry Pi
 
-- TODO: infoblox instructions go here.
+- Launch infoblox (or other DHCP management tool) and create a new DHCP reservation for the Raspberry Pi MAC address obtained in Step 3.
+- At DLS the IP address should be:
+    - 10.x.20.1 for pi1
+    - 10.x.20.2 for pi2
+    - etc.
 
 ## Step 5: Connect the Raspberry Pi to the Network and Power it On
 
@@ -59,6 +58,23 @@ uvx usb-remote list
 ```
 
 You should see the new server listed without errors.
+
+## Troubleshooting
+
+If the new server shows errors when the client tries to list devices, try the following:
+
+```bash
+ssh local@<raspberry_pi_ip_address>
+# password is "local"
+
+# check the status of the two services
+sudo systemctl status usbipd
+sudo systemctl status usb-remote
+
+# check their logs for errors
+sudo journalctl -u usbipd -e
+sudo journalctl -u usb-remote -e
+```
 
 
 [raspiImageLink]: https://drive.google.com/file/d/1zlAM9k-y9gVM7K47EDJZKzh3DB3L_1QD/view?usp=sharing

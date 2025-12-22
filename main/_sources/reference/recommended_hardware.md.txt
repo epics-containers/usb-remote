@@ -1,3 +1,37 @@
-# Recommened Hardware
+# Recommend Server Hardware
 
-TODO: Write this page.
+This hardware has been tested at DLS and is known to work well as a usb-remote server.
+
+If you choose this hardware then a pre-configured Raspberry Pi usb-remote server image is available to download, see the [Raspberry Pi Commissioning Guide](../tutorials/commissioning_raspi.md).
+
+## Raspberry Pi 5 8GB RAM
+
+Raspberry 4 is also suitable, I have also found 2GB RAM models to work fine.
+
+![Raspberry Pi 5](images/pi5.png)
+
+## MicroSD Card 16GB
+
+e.g. SanDisk Ultra 16GB or larger.
+
+![SanDisk Ultra](images/sandisk.png)
+
+## High Quality Passively Cooled Case
+
+e.g.Geekworm Raspberry Pi 5 Case (P573)
+
+![Geekworm Case](images/pi-case.png)
+
+## Power Supply
+
+Official Raspberry Pi 27W USB-C Power Supply
+
+![Raspberry Pi Power Supply](images/raspi-ps.png)
+
+## Alternative Power Supply
+
+If you plan on running a number of Pis. Then a modern GAN USB-C Power Delivery power supply with multiple ports is a good alternative. Make sure it can provide at least 5A at 5V per Pi.
+
+e.g. Ugreen Nexode 200w
+
+![Ugreen Nexode](images/ugreen-ps.png)
