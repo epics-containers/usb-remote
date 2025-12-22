@@ -7,7 +7,6 @@ Technical reference material including APIs and release notes.
 reference/recommended_hardware.md
 reference/config.md
 reference/architecture.md
-:glob:
 
 API <_api/usb_remote>
 genindex

@@ -8,7 +8,6 @@ how-to/client_setup.md
 how-to/server_setup.md
 how-to/new_raspi.md
 how-to/updating_raspi_image.md
-:glob:
-
-how-to/*
+how-to/run-container.md
+how-to/contribute.md
 ```
