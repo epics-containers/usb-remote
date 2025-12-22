@@ -80,7 +80,7 @@ IMPORTANT: These steps must be done before the first boot of the Raspberry Pi. T
     echo "local:$(echo local | openssl passwd -6 -stdin)" | sudo tee userconf.txt
     ```
 
-1. If you need a static IP address for wired ethernet, edit `firmware/cmdline.txt`.
+1. If you need a static IP address for wired ethernet, edit `cmdline.txt`.
     ```bash
     sudo vim /boot/cmdline.txt
     # add " ip=<your_static_ip_address>" at the end of the single line in the file.
