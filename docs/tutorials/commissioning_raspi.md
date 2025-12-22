@@ -25,13 +25,13 @@ Alternatively, flash your own card.
 
 1. Obtain the latest Raspberry Pi usb-remote server image.
     - At DLS this is available at /dls_sw/apps TODO: add path here.
-    - giles' latest image can be downloaded from here: https://drive.google.com/file/d/1pvCIkpnDC90Z086w6k2WjTKtdAcx9RPU/view?usp=sharing
+    - giles' latest image can be downloaded from here: [raspi-lite-usb-remote-2.1.0.img on Google Drive][raspiImageLink]
     - Alternatively, build your own image using the instructions at [Create a New Raspberry Pi Boot Image From Scratch](../how-to/new_raspi.md).
 1. Insert a microSD card of at least 16GB capacity into a card reader connected to your computer.
 1. Use `lsblk` to identify the device name of the microSD card (e.g. `/dev/sdb`).
 1. Flash the image to a microSD card. **CAREFUL** - replace `/dev/sdX` with the correct device name for your microSD card and remember that this will overwrite the specified device.
     ```bash
-    sudo dd if=./raspberry_pi_usb-remote_server.img of=/dev/sdX bs=4M status=progress conv=fsync
+    sudo dd if=./raspi-lite-usb-remote-2.1.0.img of=/dev/sdX bs=4M status=progress conv=fsync
     ```
 
 ## Step 3: Extract the Raspberry Pi MAC Address
@@ -48,6 +48,7 @@ Alternatively, flash your own card.
 
 - Connect the Raspberry Pi to the network using a wired ethernet connection.
 - Power on the Raspberry Pi using the USB-C power supply.
+- Wait a few minutes as the Pi will reboot twice to expand the root filesystem and set up read-only filesystem mode.
 
 ## Step 6: Verify the New Server is Visible to the usb-remote Client
 On any linux machine that can route to the new Raspberry Pi server IP, run:
@@ -58,3 +59,6 @@ uvx usb-remote list
 ```
 
 You should see the new server listed without errors.
+
+
+[raspiImageLink]: https://drive.google.com/file/d/1zlAM9k-y9gVM7K47EDJZKzh3DB3L_1QD/view?usp=sharing
