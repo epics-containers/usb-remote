@@ -28,6 +28,12 @@ Official Raspberry Pi 27W USB-C Power Supply
 
 ![Raspberry Pi Power Supply](images/raspi-ps.png)
 
+## Raspberry Pi Pico with Pico OLED 1.3" Display
+
+This is used for easily extracting the MAC address of the Raspberry Pi during commissioning.
+
+![Pico OLED](images/pico-led.png)
+
 ## Alternative Power Supply
 
 If you plan on running a number of Pis. Then a modern GAN USB-C Power Delivery power supply with multiple ports is a good alternative. Make sure it can provide at least 5A at 5V per Pi.

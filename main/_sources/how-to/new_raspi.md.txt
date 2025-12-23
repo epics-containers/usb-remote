@@ -255,24 +255,38 @@ Read-only mode uses overlayfs in RAM to avoid wearing out the sdcard and makes t
     sudo apt-get -y install cryptsetup cryptsetup-bin overlayroot
     ```
 
-(step-9-create-a-backup-image-of-the-microsd-card)=
-## Step 9 Create a Backup Image of the microSD Card
+## Step 9 Add a Process to Send the MAC Address to a Pico (optional)
+
+This adds a step to etc/rc.local.
+
+IMPORTANT: do not add blocking commands to rc.local as it will prevent the Pi from booting correctly.
+For this reason we run the command in the background using `&`.
+
+    ```bash
+    echo '#!/bin/sh -e
+
+    # when a pico device is plugged in to USB - send MAC addr to it.
+    /home/local/.local/bin/uvx --from usb-remote pico-send-mac &
+
+    /etc/resize-root-fs
+    exit 0
+    ' | sudo tee /etc/rc.local
+    ```
+
+(create-a-backup-image)=
+## Step 10 Create a Backup Image of the microSD Card
 
 Before backing up the image we put the SD card into read-only mode. This avoids wearing out the SD card and makes the Pi reset to a clean state on each boot.
 
 1. Insert a USB stick into the Raspberry Pi to store the backup image.
 
-1. use `lsblk` to identify the device name of the USB stick 1st partition which will normally be `/dev/sda1`. Mount the
-
-
-
-USB stick at `/media/local/usb`:
+1. use `lsblk` to identify the device name of the USB stick 1st partition which will normally be `/dev/sda1`. Mount the USB stick at `/media/local/usb`:
     ```bash
     sudo mkdir -p /media/local/usb
     sudo mount /dev/sda1 /media/local/usb
     ```
 
-1. Run the image-backup script to create a backup image of the microSD card to the USB stick. Rplace the output file name with something appropriate including the version of usb-remote.
+1. Run the image-backup script to create a backup image of the microSD card to the USB stick. Replace the output file name with something appropriate including the version of usb-remote.
     ```bash
     sudo image-backup
     # when promted for output file, use something like:
@@ -291,13 +305,11 @@ USB stick at `/media/local/usb`:
 
 That's it. Your img file can now be used to create additional Raspberry Pi usb-remote servers as needed.
 
+To find out how to commission additional Raspberry Pi servers from this image see [Commissioning Additional Raspberry Pi Servers](../tutorials/commissioning_raspi.md).
+
 
 ## Conclusion
 
-You now have a backup image of your configured Raspberry Pi microSD card that you can use to create additional Raspberry Pi servers as needed. To restore the image to another microSD card, use the `dd` command as described in Step 1, replacing the input file with your backup image file.
-
-The Raspberry Pi you have just been working with is now ready to be used as a production server. Simply power it back on and it will boot into read-only mode with usb-remote installed and ready to use.
-
-You should configure your router or `infoblox` to assign it a DHCP reservation so it always gets the same IP address. To do this requires knowing the Raspberry Pi's MAC address.
+You now have a backup image of your configured Raspberry Pi microSD card that you can use to create additional Raspberry Pi servers as needed.
 
 See [Commissioning Additional Raspberry Pi Servers](../tutorials/commissioning_raspi.md) for instructions on deploying the backup image to new Raspberry Pis.

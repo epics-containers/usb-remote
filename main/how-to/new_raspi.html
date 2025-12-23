@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Create a New Raspberry Pi Boot Image From Scratch &#8212; usb-remote 2.1.1.dev4+gf9d719383 documentation</title>
+    <title>Create a New Raspberry Pi Boot Image From Scratch &#8212; usb-remote 2.1.2.dev1+g1ad47e698 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=a46aeb20"></script>
+    <script src="../_static/documentation_options.js?v=5275fd37"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -401,6 +401,7 @@
 <li class="toctree-l1"><a class="reference internal" href="server_setup.html">Server Setup</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Create a New Raspberry Pi Boot Image From Scratch</a></li>
 <li class="toctree-l1"><a class="reference internal" href="updating_raspi_image.html">Updating an Existing Raspberry Pi Boot Image</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup_pico.html">Setup Rasberry Pi Pico for MAC Address Display</a></li>
 <li class="toctree-l1"><a class="reference internal" href="run-container.html">Run in a container</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contribute.html">Contribute to the project</a></li>
 </ul>
@@ -743,17 +744,36 @@ sudo<span class="w"> </span>apt-get<span class="w"> </span>-y<span class="w"> </
 </li>
 </ol>
 </section>
-<section id="step-9-create-a-backup-image-of-the-microsd-card">
-<span id="id1"></span><h2>Step 9 Create a Backup Image of the microSD Card<a class="headerlink" href="#step-9-create-a-backup-image-of-the-microsd-card" title="Link to this heading">#</a></h2>
+<section id="step-9-add-a-process-to-send-the-mac-address-to-a-pico-optional">
+<h2>Step 9 Add a Process to Send the MAC Address to a Pico (optional)<a class="headerlink" href="#step-9-add-a-process-to-send-the-mac-address-to-a-pico-optional" title="Link to this heading">#</a></h2>
+<p>This adds a step to etc/rc.local.</p>
+<p>IMPORTANT: do not add blocking commands to rc.local as it will prevent the Pi from booting correctly.
+For this reason we run the command in the background using <code class="docutils literal notranslate"><span class="pre">&amp;</span></code>.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>```bash
+echo &#39;#!/bin/sh -e
+
+# when a pico device is plugged in to USB - send MAC addr to it.
+/home/local/.local/bin/uvx --from usb-remote pico-send-mac &amp;
+
+/etc/resize-root-fs
+exit 0
+&#39; | sudo tee /etc/rc.local
+```
+</pre></div>
+</div>
+</section>
+<section id="step-10-create-a-backup-image-of-the-microsd-card">
+<span id="create-a-backup-image"></span><h2>Step 10 Create a Backup Image of the microSD Card<a class="headerlink" href="#step-10-create-a-backup-image-of-the-microsd-card" title="Link to this heading">#</a></h2>
 <p>Before backing up the image we put the SD card into read-only mode. This avoids wearing out the SD card and makes the Pi reset to a clean state on each boot.</p>
-<ol class="arabic simple">
-<li><p>Insert a USB stick into the Raspberry Pi to store the backup image.</p></li>
-<li><p>use <code class="docutils literal notranslate"><span class="pre">lsblk</span></code> to identify the device name of the USB stick 1st partition which will normally be <code class="docutils literal notranslate"><span class="pre">/dev/sda1</span></code>. Mount the</p></li>
-</ol>
-<p>USB stick at <code class="docutils literal notranslate"><span class="pre">/media/local/usb</span></code>:
-<code class="docutils literal notranslate"><span class="pre">bash</span>&#160;&#160;&#160;&#160; <span class="pre">sudo</span> <span class="pre">mkdir</span> <span class="pre">-p</span> <span class="pre">/media/local/usb</span>&#160;&#160;&#160;&#160; <span class="pre">sudo</span> <span class="pre">mount</span> <span class="pre">/dev/sda1</span> <span class="pre">/media/local/usb</span>&#160;&#160;&#160;&#160; </code></p>
 <ol class="arabic">
-<li><p>Run the image-backup script to create a backup image of the microSD card to the USB stick. Rplace the output file name with something appropriate including the version of usb-remote.</p>
+<li><p>Insert a USB stick into the Raspberry Pi to store the backup image.</p></li>
+<li><p>use <code class="docutils literal notranslate"><span class="pre">lsblk</span></code> to identify the device name of the USB stick 1st partition which will normally be <code class="docutils literal notranslate"><span class="pre">/dev/sda1</span></code>. Mount the USB stick at <code class="docutils literal notranslate"><span class="pre">/media/local/usb</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/media/local/usb
+sudo<span class="w"> </span>mount<span class="w"> </span>/dev/sda1<span class="w"> </span>/media/local/usb
+</pre></div>
+</div>
+</li>
+<li><p>Run the image-backup script to create a backup image of the microSD card to the USB stick. Replace the output file name with something appropriate including the version of usb-remote.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>image-backup
 <span class="c1"># when promted for output file, use something like:</span>
 /media/local/usb/raspi-lite-usb-remote-2.1.0.img
@@ -770,12 +790,11 @@ sudo<span class="w"> </span>umount<span class="w"> </span>/media/local/usb
 <li><p>You can now remove the USB stick.</p></li>
 </ol>
 <p>That’s it. Your img file can now be used to create additional Raspberry Pi usb-remote servers as needed.</p>
+<p>To find out how to commission additional Raspberry Pi servers from this image see <a class="reference internal" href="../tutorials/commissioning_raspi.html"><span class="std std-doc">Commissioning Additional Raspberry Pi Servers</span></a>.</p>
 </section>
 <section id="conclusion">
 <h2>Conclusion<a class="headerlink" href="#conclusion" title="Link to this heading">#</a></h2>
-<p>You now have a backup image of your configured Raspberry Pi microSD card that you can use to create additional Raspberry Pi servers as needed. To restore the image to another microSD card, use the <code class="docutils literal notranslate"><span class="pre">dd</span></code> command as described in Step 1, replacing the input file with your backup image file.</p>
-<p>The Raspberry Pi you have just been working with is now ready to be used as a production server. Simply power it back on and it will boot into read-only mode with usb-remote installed and ready to use.</p>
-<p>You should configure your router or <code class="docutils literal notranslate"><span class="pre">infoblox</span></code> to assign it a DHCP reservation so it always gets the same IP address. To do this requires knowing the Raspberry Pi’s MAC address.</p>
+<p>You now have a backup image of your configured Raspberry Pi microSD card that you can use to create additional Raspberry Pi servers as needed.</p>
 <p>See <a class="reference internal" href="../tutorials/commissioning_raspi.html"><span class="std std-doc">Commissioning Additional Raspberry Pi Servers</span></a> for instructions on deploying the backup image to new Raspberry Pis.</p>
 </section>
 </section>
@@ -838,7 +857,8 @@ sudo<span class="w"> </span>umount<span class="w"> </span>/media/local/usb
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-6-image-backup">Step 6 image-backup</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-7-clean-up-the-settings-for-production">Step 7 Clean Up The Settings for Production</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-8-prepare-the-backup-image-for-distribution">Step 8 Prepare the Backup Image for Distribution</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-9-create-a-backup-image-of-the-microsd-card">Step 9 Create a Backup Image of the microSD Card</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-9-add-a-process-to-send-the-mac-address-to-a-pico-optional">Step 9 Add a Process to Send the MAC Address to a Pico (optional)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-10-create-a-backup-image-of-the-microsd-card">Step 10 Create a Backup Image of the microSD Card</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#conclusion">Conclusion</a></li>
 </ul>
   </nav></div>

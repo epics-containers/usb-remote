@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Client Setup &#8212; usb-remote 2.1.2.dev1+g1ad47e698 documentation</title>
+    <title>Setup Rasberry Pi Pico for MAC Address Display &#8212; usb-remote 2.1.2.dev1+g1ad47e698 documentation</title>
   
   
   
@@ -47,7 +47,7 @@
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=30646c52"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'how-to/client_setup';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'how-to/setup_pico';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://epics-containers.github.io/usb-remote/switcher.json';
@@ -58,8 +58,8 @@
     <link rel="icon" href="../_static/dls-logo.svg"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Server Setup" href="server_setup.html" />
-    <link rel="prev" title="How-to Guides" href="../how-to.html" />
+    <link rel="next" title="Run in a container" href="run-container.html" />
+    <link rel="prev" title="Updating an Existing Raspberry Pi Boot Image" href="updating_raspi_image.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="main" />
@@ -397,11 +397,11 @@
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Client Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="client_setup.html">Client Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="server_setup.html">Server Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="new_raspi.html">Create a New Raspberry Pi Boot Image From Scratch</a></li>
 <li class="toctree-l1"><a class="reference internal" href="updating_raspi_image.html">Updating an Existing Raspberry Pi Boot Image</a></li>
-<li class="toctree-l1"><a class="reference internal" href="setup_pico.html">Setup Rasberry Pi Pico for MAC Address Display</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Setup Rasberry Pi Pico for MAC Address Display</a></li>
 <li class="toctree-l1"><a class="reference internal" href="run-container.html">Run in a container</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contribute.html">Contribute to the project</a></li>
 </ul>
@@ -447,7 +447,7 @@
     
     <li class="breadcrumb-item"><a href="../how-to.html" class="nav-link">How-to Guides</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Client Setup</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Setup Rasberry Pi Pico for MAC Address Display</span></li>
   </ul>
 </nav>
 </div>
@@ -464,52 +464,60 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="client-setup">
-<h1>Client Setup<a class="headerlink" href="#client-setup" title="Link to this heading">#</a></h1>
-<p>The client component of <code class="docutils literal notranslate"><span class="pre">usb-remote</span></code> runs on a machine that wants to access USB devices shared over the network by one or more <code class="docutils literal notranslate"><span class="pre">usb-remote</span></code> servers.</p>
-<section id="recommended-hardware">
-<h2>Recommended Hardware<a class="headerlink" href="#recommended-hardware" title="Link to this heading">#</a></h2>
-<p>Any linux machine with access to the usbip CLI can run the <code class="docutils literal notranslate"><span class="pre">usb-remote</span></code> client. Windows and MacOS are not tested yet, but as the project is written in Python and just calls out to the usbip CLI, it should be able to run on those platforms as well.</p>
+  <section id="setup-rasberry-pi-pico-for-mac-address-display">
+<h1>Setup Rasberry Pi Pico for MAC Address Display<a class="headerlink" href="#setup-rasberry-pi-pico-for-mac-address-display" title="Link to this heading">#</a></h1>
+<section id="intro">
+<h2>Intro<a class="headerlink" href="#intro" title="Link to this heading">#</a></h2>
+<p>This guide explains how to set up a Raspberry Pi Pico with an OLED display to show the MAC address of a Raspberry Pi when powered on. This is useful for commissioning new Raspberry Pi usb-remote servers.</p>
+<p>In particular, if you are using this at DLS, we expect the Pi Server to be deployed into a beamline instrumentation network. You need the Mac address of the Pi to create a DHCP reservation for it in Infoblox. Having the Pico display the MAC address means that your commissioning process is:</p>
+<ul class="simple">
+<li><p>Put a pre-configured Raspberry Pi usb-remote server microSD card in a Raspberry Pi and power it on.</p></li>
+<li><p>Plug the Pico into the Raspberry Pi USB port and wait for the MAC address to be displayed.</p></li>
+<li><p>Use the displayed MAC address to create a DHCP reservation in Infoblox.</p></li>
+<li><p>Take the Raspberry Pi to the beamline, connect it to the instrumentation network and power it on.</p></li>
+</ul>
 </section>
-<section id="installing-prerequisites">
-<h2>Installing Prerequisites<a class="headerlink" href="#installing-prerequisites" title="Link to this heading">#</a></h2>
-<ol class="arabic">
-<li><p>Install the usbip CLI:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>update
-sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>usbip
-</pre></div>
-</div>
-</li>
-<li><p>Load the vhci-hcd kernel module and ensure it loads at boot:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>modprobe<span class="w"> </span>vhci-hcd
-<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;vhci-hcd&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/modules-load.d/vhci.conf
-</pre></div>
-</div>
-</li>
-</ol>
-</section>
-<section id="installing-usb-remote-client">
-<h2>Installing usb-remote Client<a class="headerlink" href="#installing-usb-remote-client" title="Link to this heading">#</a></h2>
-<p>A quick way to install the <code class="docutils literal notranslate"><span class="pre">usb-remote</span></code> client is via the <code class="docutils literal notranslate"><span class="pre">uv</span></code> tool.</p>
-<ol class="arabic">
-<li><p>Install <code class="docutils literal notranslate"><span class="pre">uv</span></code>.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-LsSf<span class="w"> </span>https://astral.sh/uv/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
-cd<span class="p">;</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span>.bashrc
-</pre></div>
-</div>
-</li>
-<li><p>Run the client using uvx:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>uvx<span class="w"> </span>usb-remote<span class="w"> </span>--help
-</pre></div>
-</div>
-</li>
-</ol>
-</section>
-<section id="verify-the-installation">
-<h2>Verify the Installation<a class="headerlink" href="#verify-the-installation" title="Link to this heading">#</a></h2>
-<p>Assuming you have at least one <code class="docutils literal notranslate"><span class="pre">usb-remote</span></code> server running on your network, you can verify the client installation by listing available USB devices:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>usb-remote<span class="w"> </span>config<span class="w"> </span>add-server<span class="w"> </span>&lt;server_address&gt;
-usb-remote<span class="w"> </span>list
+<section id="code-on-the-pico">
+<h2>Code on the Pico<a class="headerlink" href="#code-on-the-pico" title="Link to this heading">#</a></h2>
+<p>TODO: expand this into a full explanation.</p>
+<ul class="simple">
+<li><p>flash the Pico with the UF2 for MicroPython from <a class="reference external" href="https://micropython.org/download/RPI_PICO/">https://micropython.org/download/RPI_PICO/</a></p></li>
+<li><p>save the following code as <code class="docutils literal notranslate"><span class="pre">main.py</span></code> on the Pico filesystem.</p></li>
+</ul>
+<p>TODO: this code is for a different IC2 OLED display - need to change to the correct one for the Pico OLED 1.3”</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">select</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">hardware.outputs</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span>
+
+<span class="c1"># Set up the poll object</span>
+<span class="n">poll_obj</span> <span class="o">=</span> <span class="n">select</span><span class="o">.</span><span class="n">poll</span><span class="p">()</span>
+<span class="n">poll_obj</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="p">,</span> <span class="n">select</span><span class="o">.</span><span class="n">POLLIN</span><span class="p">)</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+    <span class="n">display</span><span class="o">.</span><span class="n">lcd_print</span><span class="p">(</span><span class="s2">&quot;Await input ... &quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="c1"># Wait for input on stdin, waiting for 100 ms</span>
+        <span class="n">poll_results</span> <span class="o">=</span> <span class="n">poll_obj</span><span class="o">.</span><span class="n">poll</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">poll_results</span><span class="p">:</span>
+            <span class="c1"># Read the data from stdin (read data coming from PC)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="c1"># Write the data to the input file</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;received data: &quot;</span> <span class="o">+</span> <span class="n">data</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\r</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">display</span><span class="o">.</span><span class="n">lcd_print</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># do something if no message received (like feed a watchdog timer)</span>
+            <span class="k">continue</span>
+
+        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
 </pre></div>
 </div>
 </section>
@@ -526,20 +534,20 @@ usb-remote<span class="w"> </span>list
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="../how-to.html"
+       href="updating_raspi_image.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">How-to Guides</p>
+        <p class="prev-next-title">Updating an Existing Raspberry Pi Boot Image</p>
       </div>
     </a>
     <a class="right-next"
-       href="server_setup.html"
+       href="run-container.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Server Setup</p>
+        <p class="prev-next-title">Run in a container</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -562,10 +570,8 @@ usb-remote<span class="w"> </span>list
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#recommended-hardware">Recommended Hardware</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installing-prerequisites">Installing Prerequisites</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installing-usb-remote-client">Installing usb-remote Client</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#verify-the-installation">Verify the Installation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#intro">Intro</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#code-on-the-pico">Code on the Pico</a></li>
 </ul>
   </nav></div>
 
@@ -573,7 +579,7 @@ usb-remote<span class="w"> </span>list
 
   
   <div class="tocsection editthispage">
-    <a href="https://github.com/epics-containers/usb-remote/edit/main/docs/how-to/client_setup.md">
+    <a href="https://github.com/epics-containers/usb-remote/edit/main/docs/how-to/setup_pico.md">
       <i class="fa-solid fa-pencil"></i>
       
       
@@ -589,7 +595,7 @@ usb-remote<span class="w"> </span>list
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../_sources/how-to/client_setup.md.txt"
+      <li><a href="../_sources/how-to/setup_pico.md.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>
