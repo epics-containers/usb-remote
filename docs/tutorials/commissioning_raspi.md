@@ -29,7 +29,7 @@ If you do not already have a pre-configured Raspberry Pi usb-remote server image
 
 ## Step 3: Extract the Raspberry Pi MAC Address
 
-- If you have a label printer. Plug it in to the Raspberry Pi and power it on. After minute or so, it will print a label with the MAC address. (this feature is TODO!)
+- If you have a Pico with screen then plug it into the Raspberry Pi USB port and power on the Pi. The MAC address will be displayed on the screen within a minute.
 - Otherwise you will need to boot the Raspberry Pi and get the MAC address from the command line.
   ```bash
   ip link show eth0
