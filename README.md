@@ -17,11 +17,13 @@ Releases        | <https://github.com/epics-containers/usb-remote/releases>
 
 ## Overview
 
-`usb-remote` allows USB devices to be very easily shared over a network using the linux usbip service. A `usb-remote` server runs on a machine with physical USB devices attached, and clients can connect to the server to access and control those devices as if they were locally connected.
+`usb-remote` allows USB devices to be easily shared over a network using the Linux usbip service.
+
+A `usb-remote` server runs on a machine with physical USB devices attached and shares its devices to clients. Clients can connect to multiple servers to access and control their USB devices as if they were locally connected.
 
 ## Comparison to Digi's AnyWhereUSB
 
-`usb-remote` is an FOSS alternative to commercial USB-over-Ethernet solutions like Digi's AnyWhereUSB.
+`usb-remote` is a FOSS alternative to commercial USB-over-Ethernet solutions like Digi's AnyWhereUSB.
 
 Advantages of Digi's AnyWhereUSB:
 - Commercial product with support and warranty
