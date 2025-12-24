@@ -11,4 +11,5 @@ how-to/updating_raspi_image.md
 how-to/setup_pico.md
 how-to/run-container.md
 how-to/contribute.md
+how-to/dhcp_server.md
 ```

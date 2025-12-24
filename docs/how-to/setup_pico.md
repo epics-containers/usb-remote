@@ -1,4 +1,4 @@
-# Setup Rasberry Pi Pico for MAC Address Display
+# Setup Raspberry Pi Pico for MAC Address Display
 
 ## Intro
 
@@ -11,19 +11,26 @@ In particular, if you are using this at DLS, we expect the Pi Server to be deplo
 - Use the displayed MAC address to create a DHCP reservation in Infoblox.
 - Take the Raspberry Pi to the beamline, connect it to the instrumentation network and power it on.
 
+## Hardware Required
+
+- Raspberry Pi Pico (with micro USB connector)
+- A display for the Pico e.g. 1.3" I2C OLED Display
+  - The next heading provides code for this specific display - other displays will need a small amount of code modification
+
+![Raspberry Pi Pico with OLED display](../reference/images/pico-led.png)
+
 ## Code on the Pico
 
-TODO: expand this into a full explanation.
-
 - flash the Pico with the UF2 for MicroPython from <https://micropython.org/download/RPI_PICO/>
-- save the following code as `main.py` on the Pico filesystem.
+- clone https://github.com/samveen/pico-oled-1.3-driver and copy the python files to the Pico root filesystem
+- save the following code as `main.py` on the Pico root filesystem.
 
+See <https://www.waveshare.com/wiki/Pico-OLED-1.3> for more details on using the display.
 
-TODO: this code is for a different IC2 OLED display - need to change to the correct one for the Pico OLED 1.3"
 ```python
-import asyncio
 import select
 import sys
+import PicoOled13
 
 from hardware.outputs import display
 
@@ -31,27 +38,28 @@ from hardware.outputs import display
 poll_obj = select.poll()
 poll_obj.register(sys.stdin, select.POLLIN)
 
-
 async def main():
-    display.lcd_print("Await input ... ", 0)
-    await asyncio.sleep(1)
+    # Initialize the display
+    display=PicoOled13.get()
+    display.clear()
+    display.text("Listening ...",0,0,0xffff)
+    display.show()
+
+    sys.stdout.write("awaiting data ...\r")
 
     while True:
-        # Wait for input on stdin, waiting for 100 ms
-        poll_results = poll_obj.poll(100)
+        # Wait for input on stdin, waiting for 1000 ms
+        poll_results = poll_obj.poll(1000)
         if poll_results:
             # Read the data from stdin (read data coming from PC)
             data = sys.stdin.readline().strip()
-            # Write the data to the input file
             sys.stdout.write("received data: " + data + "\r")
+
+            # Write the data to the display
             if len(data) > 0:
-                display.lcd_print(data, 1)
-        else:
-            # do something if no message received (like feed a watchdog timer)
-            continue
+                display.clear()
+                display.text(data,0,0,0xffff)
+                display.show()
 
-        await asyncio.sleep(1)
-
-
-asyncio.run(main())
+main()
 ```

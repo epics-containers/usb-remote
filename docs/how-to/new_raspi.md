@@ -255,22 +255,25 @@ Read-only mode uses overlayfs in RAM to avoid wearing out the sdcard and makes t
     sudo apt-get -y install cryptsetup cryptsetup-bin overlayroot
     ```
 
-## Step 9 Add a Process to Send the MAC Address to a Pico (optional)
+## Step 9 Add a Service to Send the MAC Address to a Pico (optional)
 
-This adds a step to etc/rc.local.
+Adding this service will monitor USB ports for a Raspberry Pi Pico being plugged in. When a Pico is detected it will send the Pi's MAC address to the Pico.
 
-IMPORTANT: do not add blocking commands to rc.local as it will prevent the Pi from booting correctly.
-For this reason we run the command in the background using `&`.
+This is useful for commissioning new usb-remote servers using a Pico as described in [Setup Raspberry Pi Pico for MAC Address Display](setup_pico.md).
 
     ```bash
-    echo '#!/bin/sh -e
+    echo '[Unit]
+    Description=Monitor USB and send MAC address to any pico detected
+    After=multi-user.target
 
-    # when a pico device is plugged in to USB - send MAC addr to it.
-    /home/local/.local/bin/uvx --from usb-remote pico-send-mac &
+    [Service]
+    ExecStart=/home/local/.local/bin/uvx --from usb-remote pico-send-mac
 
-    /etc/resize-root-fs
-    exit 0
-    ' | sudo tee /etc/rc.local
+    [Install]
+    WantedBy=multi-user.target
+    ' | sudo tee /etc/systemd/system/send-mac.service
+
+    sudo systemctl enable send-mac --now
     ```
 
 (create-a-backup-image)=
