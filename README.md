@@ -49,17 +49,21 @@ usb-remote list
 # List devices on a specific server
 usb-remote list --host raspberrypi1
 
-# Attach a device (scans all servers, fails if multiple matches)
+# Attach a device my description substring
+# (scans all servers, fails on multiple matches)
 usb-remote attach --desc "Camera"
 
 # Attach first matching device across servers
 usb-remote attach --desc "Camera" --first
 
-# Attach a device based on serial number - recommended for guaranteed unique match
-usb-remote attach --serial=5072D8DF
+# Attach a device based on glob of serial number - recommended for guaranteed unique match
+usb-remote attach --serial=??72D8DF
 
 # Detach a device
-usb-remote detach --serial=5072D8DF
+usb-remote detach --serial=??72D8DF
+
+# Find devices on the 1-4 bus of a specific server, using a glob pattern
+usb-remote list --host raspberrypi1 --bus '1-4-*'
 ```
 
 ## Architecture

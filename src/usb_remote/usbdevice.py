@@ -145,7 +145,11 @@ def get_device(
                 continue
         if bus and not globre.match(bus.lower(), device.bus_id.lower()):
             continue
-        if desc and not globre.match(desc, device.description):
+        # for desc, match a substring or glob pattern
+        if desc and (
+            not globre.match(desc, device.description)
+            and desc not in device.description
+        ):
             continue
         if serial and not globre.match(serial, device.serial):
             continue
