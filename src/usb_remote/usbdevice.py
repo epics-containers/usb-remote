@@ -1,7 +1,7 @@
+import fnmatch
 import re
 import subprocess
 
-import globre
 import usb.core
 from pydantic import BaseModel, Field
 
@@ -141,17 +141,17 @@ def get_device(
     for device in devices:
         if id:
             device_id = f"{device.vendor_id}:{device.product_id}"
-            if not globre.match(id.lower(), device_id.lower()):
+            if not fnmatch.fnmatch(device_id.lower(), id.lower()):
                 continue
-        if bus and not globre.match(bus.lower(), device.bus_id.lower()):
+        if bus and not fnmatch.fnmatch(device.bus_id.lower(), bus.lower()):
             continue
         # for desc, match a substring or glob pattern
         if desc and (
-            not globre.match(desc, device.description)
+            not fnmatch.fnmatch(device.description, desc)
             and desc not in device.description
         ):
             continue
-        if serial and not globre.match(serial, device.serial):
+        if serial and device.serial and not fnmatch.fnmatch(device.serial, serial):
             continue
         filtered_devices.append(device)
 
