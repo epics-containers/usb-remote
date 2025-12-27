@@ -362,6 +362,12 @@ wheels = [
 ]
 
 [[package]]
+name = "globre"
+version = "0.1.5"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/5a/ce/a9e2f3317a458f8c591a1f95d4061d4e241f529ba678292acdcf2d804783/globre-0.1.5.tar.gz", hash = "sha256:ee214204f237e9114b8f61eeb61c2abd1e665ca3b59e5a6a0b070971c0bb12e2", size = 20388, upload-time = "2016-10-29T20:19:27.413Z" }
+
+[[package]]
 name = "h11"
 version = "0.16.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1326,6 +1332,7 @@ wheels = [
 name = "usb-remote"
 source = { editable = "." }
 dependencies = [
+    { name = "globre" },
     { name = "pydantic" },
     { name = "pyserial" },
     { name = "pyudev" },
@@ -1353,6 +1360,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "globre", specifier = ">=0.1.5" },
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "pyserial", specifier = ">=3.5" },
     { name = "pyudev", specifier = ">=0.24.4" },

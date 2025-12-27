@@ -13,6 +13,7 @@
         "bootfs",
         "cmdline",
         "conv",
+        "globre",
         "raspi",
         "raspios",
         "sdcard",

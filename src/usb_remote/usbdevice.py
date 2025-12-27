@@ -1,6 +1,7 @@
 import re
 import subprocess
 
+import globre
 import usb.core
 from pydantic import BaseModel, Field
 
@@ -139,17 +140,14 @@ def get_device(
 
     for device in devices:
         if id:
-            vid, pid = id.split(":")
-            if (
-                device.vendor_id.lower() != vid.lower()
-                or device.product_id.lower() != pid.lower()
-            ):
+            device_id = f"{device.vendor_id}:{device.product_id}"
+            if not globre.match(id.lower(), device_id.lower()):
                 continue
-        if bus and device.bus_id != bus:
+        if bus and not globre.match(bus.lower(), device.bus_id.lower()):
             continue
-        if desc and desc.lower() not in device.description.lower():
+        if desc and not globre.match(desc, device.description):
             continue
-        if serial and device.serial != serial:
+        if serial and not globre.match(serial, device.serial):
             continue
         filtered_devices.append(device)
 
