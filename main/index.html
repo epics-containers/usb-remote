@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>usb-remote &#8212; usb-remote 2.2.1.dev4+g4d24e6e13 documentation</title>
+    <title>usb-remote &#8212; usb-remote 2.2.2.dev2+gee85604ac documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=0d7b8a42"></script>
+    <script src="_static/documentation_options.js?v=630fcf32"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -470,8 +470,9 @@
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
 <p>See the <a class="reference internal" href="how-to/server_setup.html"><span class="std std-doc">Server Setup</span></a> and <a class="reference internal" href="how-to/client_setup.html"><span class="std std-doc">Client Setup</span></a> guides for installation instructions.</p>
+</section>
 <section id="example-client-commands">
-<h3>Example Client Commands<a class="headerlink" href="#example-client-commands" title="Link to this heading">#</a></h3>
+<h2>Example Client Commands<a class="headerlink" href="#example-client-commands" title="Link to this heading">#</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># List devices on all configured servers</span>
 usb-remote<span class="w"> </span>list
 
@@ -485,17 +486,23 @@ usb-remote<span class="w"> </span>attach<span class="w"> </span>--desc<span clas
 <span class="c1"># Attach first matching device across servers</span>
 usb-remote<span class="w"> </span>attach<span class="w"> </span>--desc<span class="w"> </span><span class="s2">&quot;Camera&quot;</span><span class="w"> </span>--first
 
-<span class="c1"># Attach a device based on glob of serial number - recommended for guaranteed unique match</span>
-usb-remote<span class="w"> </span>attach<span class="w"> </span>--serial<span class="o">=</span>??72D8DF
+<span class="c1"># Attach a device based on serial number - recommended to guarantee unique match</span>
+usb-remote<span class="w"> </span>attach<span class="w"> </span>--serial<span class="o">=</span>1272D8DF
 
 <span class="c1"># Detach a device</span>
-usb-remote<span class="w"> </span>detach<span class="w"> </span>--serial<span class="o">=</span>??72D8DF
+usb-remote<span class="w"> </span>detach<span class="w"> </span>--serial<span class="o">=</span>1272D8DF
 
 <span class="c1"># Find devices on the 1-4 bus of a specific server, using a glob pattern</span>
 usb-remote<span class="w"> </span>list<span class="w"> </span>--host<span class="w"> </span>raspberrypi1<span class="w"> </span>--bus<span class="w"> </span><span class="s1">&#39;1-4-*&#39;</span>
 </pre></div>
 </div>
-</section>
+<p>Search Arguments:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--desc</span> <span class="pre">TEXT</span></code> : substring or glob pattern to match device description</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--serial</span> <span class="pre">TEXT</span></code> : glob pattern to match device serial number</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--bus</span> <span class="pre">TEXT</span></code> : glob pattern to match USB bus ID (e.g. <code class="docutils literal notranslate"><span class="pre">1-4.3</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--host</span> <span class="pre">TEXT</span></code> : search a single server by hostname or IP address</p></li>
+</ul>
 </section>
 <section id="architecture">
 <h2>Architecture<a class="headerlink" href="#architecture" title="Link to this heading">#</a></h2>
