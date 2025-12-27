@@ -17,7 +17,7 @@ Releases        | <https://github.com/epics-containers/usb-remote/releases>
 
 ## Overview
 
-`usb-remote` allows USB devices to be easily shared over a network using the Linux usbip service.
+`usb-remote` allows USB devices to be easily discovered and shared over a network using the USB/IP USB-over-Ethernet service.
 
 A `usb-remote` server runs on a machine with physical USB devices attached and shares its devices to clients. Clients can connect to multiple servers to access and control their USB devices as if they were locally connected.
 
