@@ -4,6 +4,8 @@ Pi Pico device via USB serial communication. The script waits for the device to
 be connected and sends the message once connected.
 """
 
+from time import sleep
+
 import pyudev
 import serial
 import serial.tools.list_ports
@@ -12,14 +14,38 @@ pico_vid = 0x2E8A  # Raspberry Pi Pico Vendor ID
 pico_pid = 0x0005  # Pico with MicroPython firmware
 
 
-def get_mac_address() -> str:
-    import uuid
+def get_host_name() -> str:
+    import socket
 
-    mac = uuid.getnode()
-    mac_str = "".join(
-        [f"{(mac >> ele) & 0xFF:02x}" for ele in range(0, 8 * 6, 8)][::-1]
-    )
-    return mac_str
+    hostname = socket.gethostname()
+    return hostname
+
+
+def get_mac_address() -> str:
+    import os
+
+    # Get list of network interfaces
+    net_path = "/sys/class/net"
+    interfaces = [
+        i for i in os.listdir(net_path) if i != "lo" and not i.startswith("docker")
+    ]  # Exclude loopback and docker
+
+    # Sort to ensure consistent ordering
+    interfaces.sort()
+
+    if not interfaces:
+        return "00:00:00:00:00:00"
+
+    # Get MAC address of first interface
+    first_nic = interfaces[0]
+    mac_file = os.path.join(net_path, first_nic, "address")
+
+    try:
+        with open(mac_file) as f:
+            mac_str = f.read().strip().upper()
+        return mac_str
+    except OSError:
+        return "00:00:00:00:00:00"
 
 
 def check_for_pico():
@@ -27,7 +53,7 @@ def check_for_pico():
     ports = serial.tools.list_ports.comports()
     for port in ports:
         if port.vid == pico_vid and port.pid == pico_pid:
-            print("Pico found!")
+            print("Pico found at:", port.device)
             return port.device
     return None
 
@@ -78,10 +104,14 @@ def main():
     A function that waits for a raspi pico device 2e8a:0005 to be connected via USB
     and sends the current MAC address to it via the serial port.
     """
-    msg = get_mac_address() + "\n"
+    msg = f"MAC address:\n{get_mac_address()}\n"
+    msg += "---------------\n"
+    msg += f"host name:\n{get_host_name()}\n"
 
     port_path = check_for_pico()
     if port_path is not None:
+        sleep(1)  # wait for the device to be ready
+        print("sending to currently connected device:", port_path)
         send_message(port_path, msg)
 
     while True:
