@@ -1,0 +1,23 @@
+# Example usb-remote configuration file
+#
+# Config file discovery (in priority order):
+#   1. --config flag: usb-remote list --config /path/to/config.yaml
+#   2. USB_REMOTE_CONFIG environment variable
+#   3. .usb-remote.config in current directory (project-local)
+#   4. ~/.config/usb-remote/usb-remote.config (this default location)
+#
+# To use this file, copy it to one of the above locations and edit as needed.
+
+# List of USB device servers to scan
+# Each server should be a hostname or IP address
+# The list command will query all servers and display devices grouped by server
+# The attach/detach commands will scan all servers to find a matching device
+servers:
+  - raspberrypi
+  - 192.168.1.100
+  - usb-server-1.local
+
+# Connection timeout in seconds (default: 5.0)
+# Controls how long to wait when connecting to each server
+# Useful to prevent hanging when servers are unreachable
+timeout: 5.0
