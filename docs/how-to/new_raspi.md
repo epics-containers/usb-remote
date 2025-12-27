@@ -109,6 +109,7 @@ IMPORTANT: These steps must be done before the first boot of the Raspberry Pi. T
     - Enter your SSID and password
     - Finish
     - ping google.com to check internet access (try `sudo reboot` if it does not work immediately)
+    If you need to connect to GovWiFi then you require the GUI version of the OS see [Connecting to GovWiFi](../reference/govwifi_setup.md).
 
 1. Once connected, update the package lists and upgrade installed packages, plus get vim and git.
     ```bash
@@ -124,7 +125,7 @@ IMPORTANT: These steps must be done before the first boot of the Raspberry Pi. T
 
 ## Step 4 Install and Configure usbip
 
-1. Add the kernel modules to `/etc/modules` so they load at boot.
+1. Add the kernel modules to `/etc/modules-load.d` so they load at boot.
     ```bash
     sudo modprobe usbip_core
     sudo modprobe usbip_host
@@ -158,15 +159,17 @@ IMPORTANT: These steps must be done before the first boot of the Raspberry Pi. T
 
 1. Install `uv`.
     ```bash
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-    cd; source .bashrc
+    curl -LsSfO https://astral.sh/uv/install.sh
+    sudo bash install.sh
     ```
 
 1. Install `usb-remote` system service.
     ```bash
-    sudo .local/bin/uvx usb-remote install-service --system
-    sudo systemctl enable --now usb-remote
-    sudo systemctl status usb-remote
+    sudo -s # uv (installed by root) requires the root profile so use sudo -s
+    uvx usb-remote install-service --system
+    systemctl enable --now usb-remote
+    systemctl status usb-remote # check it is running correctly
+    exit
     ```
 
 ## Step 6 image-backup
@@ -190,7 +193,6 @@ The master sdcard image wants to use DHCP only and be isolated from the internet
 
 1. Disable the static IP address if you set one up.
     ```bash
-    sudo apt install vim
     sudo vim /boot/firmware/cmdline.txt
     # remove " ip=<your_static_ip_address>" that you added earlier
     ```
@@ -205,13 +207,7 @@ The master sdcard image wants to use DHCP only and be isolated from the internet
 
 ## Step 8 Prepare the Backup Image for Distribution
 
-The image file you will create will remove the empty space in the root partition to make it nice and small. This makes it much quicker to copy to new microSD cards.
-
-For this reason we need to set up a script that will run once on the first boot of any copies of the image made from this master sdcard.
-
-The run once script will:
-- expand the root filesystem to fill the sdcard
-- enable read-only mode.
+Add a `run-once service` to the image so that when copies of the image are first booted they will enable read-only mode (after the root filesystem has been expanded - this feature is added automatically by image-backup).
 
 Read-only mode uses overlayfs in RAM to avoid wearing out the sdcard and makes the Pi reset to a clean state on each boot.
 
@@ -261,20 +257,20 @@ Adding this service will monitor USB ports for a Raspberry Pi Pico being plugged
 
 This is useful for commissioning new usb-remote servers using a Pico as described in [Setup Raspberry Pi Pico for MAC Address Display](setup_pico.md).
 
-    ```bash
-    echo '[Unit]
-    Description=Monitor USB and send MAC address to any pico detected
-    After=multi-user.target
+```bash
+echo '[Unit]
+Description=Monitor USB and send MAC address to any pico detected
+After=multi-user.target
 
-    [Service]
-    ExecStart=/home/local/.local/bin/uvx --from usb-remote pico-send-mac
+[Service]
+ExecStart=/root/.local/bin/uvx --from usb-remote pico-send-mac
 
-    [Install]
-    WantedBy=multi-user.target
-    ' | sudo tee /etc/systemd/system/send-mac.service
+[Install]
+WantedBy=multi-user.target
+' | sudo tee /etc/systemd/system/send-mac.service
 
-    sudo systemctl enable send-mac --now
-    ```
+sudo systemctl enable send-mac --now
+```
 
 (create-a-backup-image)=
 ## Step 10 Create a Backup Image of the microSD Card
@@ -293,7 +289,7 @@ Before backing up the image we put the SD card into read-only mode. This avoids 
     ```bash
     sudo image-backup
     # when promted for output file, use something like:
-    /media/local/usb/raspi-lite-usb-remote-2.1.0.img
+    /media/local/usb/raspi-lite-usb-remote-2.2.2.img
     # choose the defaults for the other prompts and y to confirm file creation.
     ```
 

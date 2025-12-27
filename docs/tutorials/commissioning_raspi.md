@@ -11,11 +11,11 @@ See [Recommended Server Hardware](../reference/recommended_hardware.md).
 
 Any Raspberry Pi 4 or 5 with at least 4GB RAM and at least 16GB microSD card is suitable.
 
-## Step 2b: Flash the Raspberry Pi usb-remote Server Image
+## Step 2: Flash the Raspberry Pi usb-remote Server Image
 
 If you do not already have a pre-configured Raspberry Pi usb-remote server image, follow these steps to flash the image to a microSD card.
 
-1. Download [raspi-lite-usb-remote-2.1.0.img on Google Drive][raspiImageLink]
+1. Download [raspi-lite-usb-remote-2.2.2.img on Google Drive][raspiImageLink]
   - TODO: make a separate image for DLS with different user/password and create a central supply of duplicates.
 
 1. Insert a microSD card of at least 16GB capacity into a card reader connected to your computer.
@@ -77,4 +77,4 @@ sudo journalctl -u usb-remote -e
 ```
 
 
-[raspiImageLink]: https://drive.google.com/file/d/1zlAM9k-y9gVM7K47EDJZKzh3DB3L_1QD/view?usp=sharing
+[raspiImageLink]: https://drive.google.com/file/d/10Zq5Hyd1SOx7u09zNVp8pRIa7VqsN6MS/view?usp=sharing

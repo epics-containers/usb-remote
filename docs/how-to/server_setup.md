@@ -56,15 +56,17 @@ A quick way to install the `usb-remote` server is via the `uv` tool.
 1. Install `uv`.
 
     ```bash
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-    cd; source .bashrc
+    curl -LsSfO https://astral.sh/uv/install.sh
+    sudo bash install.sh
     ```
 
 1. Install `usb-remote` system service.
 
     ```bash
-    sudo ~/.local/bin/uvx usb-remote install-service --system
-    sudo systemctl enable --now usb-remote
+    sudo -s # uv (installed by root) requires the root profile so use sudo -s
+    uvx usb-remote install-service --system
+    systemctl enable --now usb-remote
+    exit
     ```
 
 ## Verify the Installation

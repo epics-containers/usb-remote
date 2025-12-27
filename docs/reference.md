@@ -7,6 +7,7 @@ Technical reference material including APIs and release notes.
 reference/recommended_hardware.md
 reference/config.md
 reference/architecture.md
+reference/govwifi_setup.md
 
 API <_api/usb_remote>
 genindex

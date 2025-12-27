@@ -18,14 +18,15 @@ To upgrade the version of usb-remote or other software on an existing Raspberry 
 
 1. Update the (root) version of usb-remote:
    ```bash
-   sudo /home/local/.local/bin/uv tool install usb-remote==2.1.0 --upgrade
+   sudo -s # uv (installed by root) requires the root profile so use sudo -s
+   uv tool install usb-remote==2.2.2 --upgrade
    ```
 
 1. Make any other desired changes. e.g. delete the local user and add your own user/password.
 
 1. Restore `runonce.sh` to re-enable read-only filesystem mode on next boot:
    ```bash
-   sudo cp /var/local/runonce.sh.done /var/local/runonce.sh
+   cp /var/local/runonce.sh.done /var/local/runonce.sh
    ```
 
 1. Create a new img file using these instructions: {ref}`create-a-backup-image`.
