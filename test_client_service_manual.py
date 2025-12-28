@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Manual system test for client-service.
 
-This script starts the client-service and sends an attach command
+This script sends attach or detach commands to a running client-service
 with desc="Webcam" and first=true.
 
 Usage:
-    uv run python test_client_service_manual.py
+    uv run python test_client_service_manual.py [--detach]
 """
 
+import argparse
 import json
 import socket
 import sys
@@ -17,27 +18,28 @@ CLIENT_HOST = "127.0.0.1"
 CLIENT_PORT = 5056
 
 
-def send_attach_request(desc="Webcam", first=True, host=None):
+def send_device_request(command="attach", desc="Webcam", first=True, host=None):
     """
-    Send an attach request to the client-service.
+    Send an attach or detach request to the client-service.
 
     Args:
+        command: "attach" or "detach"
         desc: Device description to search for
-        first: Whether to attach the first match
+        first: Whether to attach/detach the first match
         host: Optional server host (None = use configured servers)
 
     Returns:
         Response dictionary
     """
     request = {
-        "command": "attach",
+        "command": command,
         "desc": desc,
         "first": first,
     }
     if host:
         request["host"] = host
 
-    print("\nSending attach request:")
+    print(f"\nSending {command} request:")
     print(json.dumps(request, indent=2))
 
     try:
@@ -65,25 +67,38 @@ def send_attach_request(desc="Webcam", first=True, host=None):
 
 def main():
     """Run the manual test."""
+    parser = argparse.ArgumentParser(
+        description="Manual system test for client-service"
+    )
+    parser.add_argument(
+        "--detach",
+        action="store_true",
+        help="Send detach command instead of attach",
+    )
+    args = parser.parse_args()
+
+    command = "detach" if args.detach else "attach"
+
     print("=" * 60)
     print("Client-Service Manual System Test")
     print("=" * 60)
 
     try:
-        # Send the attach request
-        response = send_attach_request(desc="Webcam", first=True)
+        # Send the device request
+        response = send_device_request(command=command, desc="Webcam", first=True)
 
         if response:
             if response.get("status") == "success":
-                print("\n✅ Test PASSED - Device attached successfully!")
+                print(f"\n✅ Test PASSED - Device {command}ed successfully!")
                 device = response.get("data", {})
-                print(
-                    f"\nDevice Details:"
-                    f"  Bus ID: {device.get('bus_id')}"
-                    f"  Description: {device.get('description')}"
-                    f"  Serial: {device.get('serial')}"
-                    f"  Server: {response.get('server')}"
-                )
+                print("\nDevice Details:")
+                print(f"  Bus ID: {device.get('bus_id')}")
+                print(f"  Description: {device.get('description')}")
+                print(f"  Serial: {device.get('serial')}")
+                print(f"  Server: {response.get('server')}")
+                local_devices = response.get("local_devices", [])
+                if local_devices:
+                    print(f"  Local devices: {', '.join(local_devices)}")
             else:
                 print(f"\n⚠️  Test result: {response.get('status')}")
                 print(f"Message: {response.get('message', 'N/A')}")

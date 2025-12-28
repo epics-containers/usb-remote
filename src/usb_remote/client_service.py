@@ -17,9 +17,9 @@ from .client_api import (
     multiple_matches_response,
     not_found_response,
 )
-from .config import get_servers
 from .port import Port
 from .usbdevice import DeviceNotFoundError, MultipleDevicesError
+from .utility import get_host_list
 
 logger = logging.getLogger(__name__)
 
@@ -40,83 +40,6 @@ class ClientService:
         self.server_socket = None
         self.running = False
 
-    def get_host_list(self, host: str | None) -> list[str]:
-        """Get list of server hosts from argument or config."""
-        if host:
-            servers = [host]
-        else:
-            servers = get_servers()
-        if not servers:
-            logger.warning("No servers configured, defaulting to localhost")
-            servers = ["localhost"]
-        return servers
-
-    def handle_attach(self, args: ClientDeviceRequest) -> tuple[str, str]:
-        """
-        Handle attach command.
-
-        Args:
-            args: ClientDeviceRequest with device search criteria
-
-        Returns:
-            Tuple of (server host, bus_id) where device was attached
-
-        Raises:
-            DeviceNotFoundError: If device not found
-            MultipleDevicesError: If multiple devices match and first not set
-        """
-        server_hosts = self.get_host_list(args.host)
-
-        logger.info(
-            f"Searching for device to attach across {len(server_hosts)} servers"
-        )
-        device, server = find_device(
-            server_hosts=server_hosts,
-            id=args.id,
-            bus=args.bus,
-            desc=args.desc,
-            first=args.first,
-            serial=args.serial,
-        )
-
-        logger.info(f"Attaching device {device.bus_id} from {server}")
-        attach_device(device.bus_id, server)
-
-        return server, device.bus_id
-
-    def handle_detach(self, args: ClientDeviceRequest) -> tuple[str, str]:
-        """
-        Handle detach command.
-
-        Args:
-            args: ClientDeviceRequest with device search criteria
-
-        Returns:
-            Tuple of (server host, bus_id) where device was detached
-
-        Raises:
-            DeviceNotFoundError: If device not found
-            MultipleDevicesError: If multiple devices match and first not set
-        """
-        server_hosts = self.get_host_list(args.host)
-
-        logger.info(
-            f"Searching for device to detach across {len(server_hosts)} servers"
-        )
-        device, server = find_device(
-            server_hosts=server_hosts,
-            id=args.id,
-            bus=args.bus,
-            desc=args.desc,
-            first=args.first,
-            serial=args.serial,
-        )
-
-        logger.info(f"Detaching device {device.bus_id} from {server}")
-        detach_device(device.bus_id, server)
-
-        return server, device.bus_id
-
     def handle_device_command(self, args: ClientDeviceRequest) -> ClientDeviceResponse:
         """
         Handle attach or detach command.
@@ -132,7 +55,7 @@ class ClientService:
             MultipleDevicesError: If multiple devices match and first not set
             RuntimeError: For other errors
         """
-        server_hosts = self.get_host_list(args.host)
+        server_hosts = get_host_list(args.host)
 
         # First find the device
         device, server = find_device(

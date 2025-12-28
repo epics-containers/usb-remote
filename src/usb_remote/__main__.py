@@ -20,6 +20,7 @@ from .config import (
 from .server import CommandServer
 from .service import install_systemd_service, uninstall_systemd_service
 from .usbdevice import get_devices
+from .utility import get_host_list
 
 __all__ = ["main"]
 
@@ -158,18 +159,6 @@ def list_command(
                     typer.echo(device)
             else:
                 typer.echo("No devices")
-
-
-def get_host_list(host: str | None) -> list[str]:
-    """Get list of server hosts from argument or config."""
-    if host:
-        servers = [host]
-    else:
-        servers = get_servers()
-    if not servers:
-        logger.warning("No servers configured, defaulting to localhost")
-        servers = ["localhost"]
-    return servers
 
 
 @app.command()

@@ -3,7 +3,21 @@
 import logging
 import subprocess
 
+from usb_remote.config import get_servers
+
 logger = logging.getLogger(__name__)
+
+
+def get_host_list(host: str | None) -> list[str]:
+    """Get list of server hosts from argument or config."""
+    if host:
+        servers = [host]
+    else:
+        servers = get_servers()
+    if not servers:
+        logger.warning("No servers configured, defaulting to localhost")
+        servers = ["localhost"]
+    return servers
 
 
 def run_command(
