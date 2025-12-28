@@ -11,8 +11,10 @@
     },
     "cSpell.words": [
         "bootfs",
+        "busnum",
         "cmdline",
         "conv",
+        "devpath",
         "globre",
         "raspi",
         "raspios",
@@ -23,6 +25,7 @@
         "usbipd",
         "userconf",
         "uspipd",
+        "vhci",
         "Wifi"
     ],
 }
