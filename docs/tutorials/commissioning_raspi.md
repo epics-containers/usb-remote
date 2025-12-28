@@ -16,6 +16,7 @@ Any Raspberry Pi 4 or 5 with at least 4GB RAM and at least 16GB microSD card is 
 If you do not already have a pre-configured Raspberry Pi usb-remote server image, follow these steps to flash the image to a microSD card.
 
 1. Download [raspi-lite-usb-remote-2.2.2.img on Google Drive][raspiImageLink]
+  - Note: this image works for both Raspberry Pi 4 and Raspberry Pi 5.
   - TODO: make a separate image for DLS with different user/password and create a central supply of duplicates.
 
 1. Insert a microSD card of at least 16GB capacity into a card reader connected to your computer.

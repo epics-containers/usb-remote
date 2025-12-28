@@ -2,10 +2,15 @@
 Module for working with local usbip ports.
 """
 
+import logging
 import re
 from dataclasses import dataclass
+from pathlib import Path
+from time import sleep
 
 from usb_remote.utility import run_command
+
+logger = logging.getLogger(__name__)
 
 # regex pattern for matching 'usbip port' output https://regex101.com/r/seWBvX/1
 re_ports = re.compile(
@@ -28,6 +33,125 @@ class Port:
     def __post_init__(self):
         # everything is strings from the regex, convert port to int
         self.port_number = int(self.port)
+        # list of local device files (e.g., ["/dev/ttyACM0"])
+        self.local_devices = self.get_local_devices()
+
+    def get_local_devices(self) -> list[str]:
+        """Find local device files associated with this usbip port.
+
+        Returns:
+            List of device file paths (e.g., ["/dev/ttyACM0", "/dev/hidraw0"])
+        """
+        devices = []
+
+        try:
+            # Find the vhci_hcd device for this port
+            # vhci ports are organized under /sys/devices/platform/vhci_hcd.*/
+            platform_path = Path("/sys/devices/platform")
+
+            if not platform_path.exists():
+                return devices
+
+            # Search through vhci_hcd controllers
+            for vhci_dir in platform_path.glob("vhci_hcd.*"):
+                # Each controller has USB busses under it
+                for usb_bus in vhci_dir.glob("usb*"):
+                    bus_num = usb_bus.name.replace("usb", "")
+
+                    # Look for the port device: format is typically {busnum}-{port}
+                    # VHCI ports map directly:
+                    #   port 0 -> {busnum}-1, port 1 -> {busnum}-2, etc.
+                    # Try different port numbering schemes
+                    for port_num in [self.port_number, self.port_number + 1]:
+                        device_path = usb_bus / f"{bus_num}-{port_num}"
+                        if device_path.exists():
+                            devices.extend(self._find_dev_files(device_path))
+                            if devices:
+                                return devices
+
+            # Fallback: search /sys/bus/usb/devices and check driver
+            sys_usb_path = Path("/sys/bus/usb/devices")
+            if sys_usb_path.exists():
+                for usb_device in sys_usb_path.iterdir():
+                    if not usb_device.is_symlink():
+                        continue
+
+                    # Check if device path contains vhci_hcd
+                    real_path = usb_device.resolve()
+                    if "vhci_hcd" in str(real_path):
+                        # Check port via devpath
+                        devpath_file = usb_device / "devpath"
+                        if devpath_file.exists():
+                            devpath = devpath_file.read_text().strip()
+                            if devpath == str(self.port_number) or devpath == str(
+                                self.port_number + 1
+                            ):
+                                devices.extend(self._find_dev_files(usb_device))
+                                if devices:
+                                    return devices
+
+        except Exception as e:
+            logger.debug(
+                f"Error finding local devices for port {self.port_number}: {e}"
+            )
+
+        return devices
+
+    def _find_dev_files(self, sys_device_path: Path) -> list[str]:
+        """Find /dev files associated with a sysfs device path.
+
+        Args:
+            sys_device_path: Path to device in /sys/bus/usb/devices/
+
+        Returns:
+            List of /dev file paths
+        """
+        dev_files = set()
+        visited = set()
+
+        def _query_path(path: Path, depth: int = 0) -> None:
+            """Recursively query a sysfs path and its children for device files."""
+            # Limit recursion depth to prevent issues
+            if depth > 10:
+                return
+
+            try:
+                # Resolve symlinks and check if we've visited this path
+                real_path = path.resolve()
+                if real_path in visited:
+                    return
+                visited.add(real_path)
+
+                # Check if this directory has a device node
+                if (path / "dev").exists():
+                    result = run_command(
+                        ["udevadm", "info", "-q", "name", "-p", str(path)],
+                        check=False,
+                    )
+                    dev_name = result.stdout.strip()
+                    if dev_name and not dev_name.startswith("/sys"):
+                        dev_path = (
+                            f"/dev/{dev_name}"
+                            if not dev_name.startswith("/")
+                            else dev_name
+                        )
+                        dev_files.add(dev_path)
+
+                # Recursively check immediate children
+                if path.is_dir():
+                    for child in path.iterdir():
+                        if child.is_dir() and not child.is_symlink():
+                            _query_path(child, depth + 1)
+
+            except Exception as e:
+                logger.debug(f"Error querying {path}: {e}")
+
+        try:
+            _query_path(sys_device_path)
+        except Exception as e:
+            logger.debug(f"Error finding dev files for {sys_device_path}: {e}")
+
+        return list(dev_files)
 
     def detach(self) -> None:
         """Detach this port from the local system."""
@@ -42,7 +166,9 @@ class Port:
         return (
             f"- Port {self.port_number}:\n  "
             f"{self.description}\n  "
-            f"busid: {self.remote_busid} from {self.server}"
+            f"busid: {self.remote_busid} from {self.server}\n  "
+            f"local devices: "
+            f"{', '.join(self.local_devices) if self.local_devices else 'none'}"
         )
 
     @staticmethod
@@ -51,17 +177,30 @@ class Port:
 
         Returns:
             A list of Port objects, each representing a port in use.
+            Returns empty list if unable to query ports (e.g., vhci_hcd not loaded).
         """
 
-        output = run_command(["sudo", "usbip", "port"]).stdout
-        ports: list[Port] = []
-        for match in re_ports.finditer(output):
-            port_info = match.groupdict()
-            ports.append(Port(**port_info))
-        return ports
+        try:
+            result = run_command(["sudo", "usbip", "port"], check=False)
+            if result.returncode != 0:
+                logger.debug(f"usbip port command failed: {result.stderr}")
+                return []
+
+            output = result.stdout
+            ports: list[Port] = []
+            for match in re_ports.finditer(output):
+                port_info = match.groupdict()
+                ports.append(Port(**port_info))
+            logger.debug(f"Found {len(ports)} active usbip ports")
+            return ports
+        except Exception as e:
+            logger.debug(f"Error listing ports: {e}")
+            return []
 
     @classmethod
-    def get_port_by_remote_busid(cls, remote_busid: str, server: str) -> "Port | None":
+    def get_port_by_remote_busid(
+        cls, remote_busid: str, server: str, retries=0
+    ) -> "Port | None":
         """Get a Port object by its remote busid.
 
         Args:
@@ -72,8 +211,16 @@ class Port:
             The Port of the local mount of the remote device if found, otherwise None.
             There can be only one match as port ids are unique per server.
         """
-        ports = cls.list_ports()
-        for port in ports:
-            if port.remote_busid == remote_busid and port.server == server:
-                return port
+
+        # after initiating an attach, it may take a moment for the port to appear -
+        # retry a few times if not found immediately
+        for attempt in range(retries + 1):
+            ports = cls.list_ports()
+            for port in ports:
+                if port.remote_busid == remote_busid and port.server == server:
+                    logger.info(f"Device attached on local port {port.port}")
+                    return port
+            if attempt < retries:
+                sleep(0.2)
+
         return None

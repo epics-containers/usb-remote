@@ -181,8 +181,14 @@ def attach(
         serial=serial,
     )
     attach_device(device.bus_id, server)
+    # discover the local port for the attached device
+    local_port = Port.get_port_by_remote_busid(device.bus_id, server, retries=20)
 
     typer.echo(f"Attached to device on {server}:\n{device}")
+    if local_port:
+        typer.echo(f"\nLocal port: {local_port}")
+    else:
+        typer.echo("Local device files not found (may still be initializing)")
 
 
 @app.command()

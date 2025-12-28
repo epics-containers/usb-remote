@@ -180,7 +180,6 @@ def attach_device(bus_id: str, server_host: str) -> None:
             bus_id,
         ]
     )
-    logger.info(f"Device attached: {bus_id}")
 
 
 def detach_device(bus_id: str, server_host: str) -> None:
