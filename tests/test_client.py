@@ -166,11 +166,11 @@ class TestAttachCommand:
             assert "Port 0:" in result.stdout
             assert "local devices:" in result.stdout
 
-    def test_attach_error_handling(self):
+    def test_attach_error_handling(self, mock_config):
         """Test attach command error handling."""
-        with patch(
-            "usb_remote.__main__.find_device",
-            side_effect=RuntimeError("Device not found"),
+        with (
+            patch("subprocess.run", side_effect=mock_subprocess_run),
+            patch("socket.socket", return_value=create_error_socket()),
         ):
             result = runner.invoke(app, ["attach", "--id", "9999:9999"])
             assert result.exit_code != 0
@@ -216,11 +216,11 @@ class TestDetachCommand:
             )
             assert result.exit_code == 0
 
-    def test_detach_error_handling(self):
+    def test_detach_error_handling(self, mock_config):
         """Test detach command error handling."""
-        with patch(
-            "usb_remote.__main__.find_device",
-            side_effect=RuntimeError("Device not attached"),
+        with (
+            patch("subprocess.run", side_effect=mock_subprocess_run),
+            patch("socket.socket", return_value=create_error_socket()),
         ):
             result = runner.invoke(app, ["detach", "--id", "1234:5678"])
             assert result.exit_code != 0
@@ -277,18 +277,20 @@ class TestMultiServerOperations:
             result = runner.invoke(app, ["detach", "--desc", "Test"])
             assert result.exit_code == 0
 
-    def test_attach_multi_server_multiple_matches_fails(self, mock_config):
+    def test_attach_multi_server_multiple_matches_fails(self, mock_socket, mock_config):
         """Test attach fails with multiple matches without --first."""
         servers = ["server1", "server2"]
+        # Both servers return a matching device
         with (
-            patch("usb_remote.__main__.get_servers", return_value=servers),
+            patch("subprocess.run", side_effect=mock_subprocess_run),
             patch(
-                "usb_remote.__main__.find_device",
-                side_effect=RuntimeError(
-                    "Multiple devices matched across servers: Test Device on server1, "
-                    "Test Device on server2. Use --first to attach the first match."
-                ),
+                "socket.socket",
+                side_effect=[
+                    mock_socket(),  # find on server1 - success
+                    mock_socket(),  # find on server2 - success
+                ],
             ),
+            patch("usb_remote.__main__.get_servers", return_value=servers),
         ):
             result = runner.invoke(app, ["attach", "--desc", "Test"])
             assert result.exit_code != 0
@@ -319,12 +321,17 @@ class TestMultiServerOperations:
     def test_attach_multi_server_no_match(self, mock_config):
         """Test attach across multiple servers with no match."""
         servers = ["server1", "server2"]
+        # Both servers return error (device not found)
         with (
-            patch("usb_remote.__main__.get_servers", return_value=servers),
+            patch("subprocess.run", side_effect=mock_subprocess_run),
             patch(
-                "usb_remote.__main__.find_device",
-                side_effect=RuntimeError("No matching device found across 2 servers"),
+                "socket.socket",
+                side_effect=[
+                    create_error_socket(),  # find on server1 - not found
+                    create_error_socket(),  # find on server2 - not found
+                ],
             ),
+            patch("usb_remote.__main__.get_servers", return_value=servers),
         ):
             result = runner.invoke(app, ["attach", "--id", "9999:9999"])
             assert result.exit_code != 0
