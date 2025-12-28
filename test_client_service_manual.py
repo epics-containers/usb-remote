@@ -2,10 +2,20 @@
 """Manual system test for client-service.
 
 This script sends attach or detach commands to a running client-service
-with desc="Webcam" and first=true.
+with flexible device search criteria.
 
 Usage:
-    uv run python test_client_service_manual.py [--detach]
+    uv run python test_client_service_manual.py [options]
+
+Examples:
+    # Attach first webcam
+    uv run python test_client_service_manual.py --desc Webcam --first
+
+    # Detach specific device by ID
+    uv run python test_client_service_manual.py --detach --id 0bda:5400
+
+    # Attach by serial number from specific host
+    uv run python test_client_service_manual.py --serial ABC123 --host 192.168.1.100
 """
 
 import argparse
@@ -18,12 +28,23 @@ CLIENT_HOST = "127.0.0.1"
 CLIENT_PORT = 5056
 
 
-def send_device_request(command="attach", desc="Webcam", first=True, host=None):
+def send_device_request(
+    command="attach",
+    id=None,
+    bus=None,
+    serial=None,
+    desc=None,
+    first=False,
+    host=None,
+):
     """
     Send an attach or detach request to the client-service.
 
     Args:
         command: "attach" or "detach"
+        id: Device ID (e.g., "0bda:5400")
+        bus: Device bus ID (e.g., "1-2.3.4")
+        serial: Device serial number
         desc: Device description to search for
         first: Whether to attach/detach the first match
         host: Optional server host (None = use configured servers)
@@ -31,12 +52,18 @@ def send_device_request(command="attach", desc="Webcam", first=True, host=None):
     Returns:
         Response dictionary
     """
-    request = {
-        "command": command,
-        "desc": desc,
-        "first": first,
-    }
-    if host:
+    request = {"command": command, "first": first}
+
+    # Only include search criteria if provided
+    if id is not None:
+        request["id"] = id
+    if bus is not None:
+        request["bus"] = bus
+    if serial is not None:
+        request["serial"] = serial
+    if desc is not None:
+        request["desc"] = desc
+    if host is not None:
         request["host"] = host
 
     print(f"\nSending {command} request:")
@@ -75,6 +102,19 @@ def main():
         action="store_true",
         help="Send detach command instead of attach",
     )
+    parser.add_argument("--id", "-d", help="Device ID e.g. 0bda:5400", metavar="ID")
+    parser.add_argument("--serial", "-s", help="Device serial number", metavar="SERIAL")
+    parser.add_argument("--desc", help="Device description substring", metavar="DESC")
+    parser.add_argument(
+        "--host", "-H", help="Server hostname or IP address", metavar="HOST"
+    )
+    parser.add_argument("--bus", "-b", help="Device bus ID e.g. 1-2.3.4", metavar="BUS")
+    parser.add_argument(
+        "--first",
+        "-f",
+        action="store_true",
+        help="Attach/detach the first match if multiple found",
+    )
     args = parser.parse_args()
 
     command = "detach" if args.detach else "attach"
@@ -85,7 +125,15 @@ def main():
 
     try:
         # Send the device request
-        response = send_device_request(command=command, desc="Webcam", first=True)
+        response = send_device_request(
+            command=command,
+            id=args.id,
+            bus=args.bus,
+            serial=args.serial,
+            desc=args.desc,
+            first=args.first,
+            host=args.host,
+        )
 
         if response:
             if response.get("status") == "success":
