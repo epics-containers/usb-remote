@@ -107,45 +107,48 @@ class Port:
             List of /dev file paths
         """
         dev_files = []
+        visited = set()
+
+        def _query_path(path: Path, depth: int = 0) -> None:
+            """Recursively query a sysfs path and its children for device files."""
+            # Limit recursion depth to prevent issues
+            if depth > 10:
+                return
+
+            try:
+                # Resolve symlinks and check if we've visited this path
+                real_path = path.resolve()
+                if real_path in visited:
+                    return
+                visited.add(real_path)
+
+                # Check if this directory has a device node
+                if (path / "dev").exists():
+                    result = run_command(
+                        ["udevadm", "info", "-q", "name", "-p", str(path)],
+                        check=False,
+                    )
+                    dev_name = result.stdout.strip()
+                    if dev_name and not dev_name.startswith("/sys"):
+                        dev_path = (
+                            f"/dev/{dev_name}"
+                            if not dev_name.startswith("/")
+                            else dev_name
+                        )
+                        if dev_path not in dev_files:
+                            dev_files.append(dev_path)
+
+                # Recursively check immediate children
+                if path.is_dir():
+                    for child in path.iterdir():
+                        if child.is_dir() and not child.is_symlink():
+                            _query_path(child, depth + 1)
+
+            except Exception as e:
+                logger.debug(f"Error querying {path}: {e}")
 
         try:
-            # Use udevadm to query all device nodes for this device and its children
-            result = run_command(
-                ["udevadm", "info", "-q", "all", "-p", str(sys_device_path)],
-                check=False,
-            )
-
-            # Parse DEVNAME entries from udevadm output
-            for line in result.stdout.splitlines():
-                if line.startswith("E: DEVNAME="):
-                    dev_name = line.split("=", 1)[1]
-                    # DEVNAME may or may not include /dev/ prefix
-                    if not dev_name.startswith("/"):
-                        dev_name = f"/dev/{dev_name}"
-                    if dev_name not in dev_files:
-                        dev_files.append(dev_name)
-
-            # Also check all child devices recursively
-            for child in sys_device_path.rglob("*"):
-                if child.is_dir():
-                    # Check if this dir represents a device node (has a "dev" file)
-                    dev_file = child / "dev"
-                    if dev_file.exists():
-                        # Query this specific device with udevadm
-                        result = run_command(
-                            ["udevadm", "info", "-q", "name", "-p", str(child)],
-                            check=False,
-                        )
-                        dev_name = result.stdout.strip()
-                        if dev_name and not dev_name.startswith("/sys"):
-                            dev_path = (
-                                f"/dev/{dev_name}"
-                                if not dev_name.startswith("/")
-                                else dev_name
-                            )
-                            if dev_path not in dev_files:
-                                dev_files.append(dev_path)
-
+            _query_path(sys_device_path)
         except Exception as e:
             logger.debug(f"Error finding dev files for {sys_device_path}: {e}")
 
@@ -217,6 +220,8 @@ class Port:
                     logger.info(f"Device attached on local port {port.port}")
                     local_port = port
                     break
-                sleep(0.2)
+            if local_port:
+                break
+            sleep(0.2)
 
         return local_port
