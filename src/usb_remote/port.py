@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from time import sleep
 
+import pyudev
+
 from usb_remote.utility import run_command
 
 logger = logging.getLogger(__name__)
@@ -45,40 +47,26 @@ class Port:
         devices = []
 
         try:
-            # Find the vhci_hcd device for this port
-            # vhci ports are organized under /sys/devices/platform/vhci_hcd.*/
-            platform_path = Path("/sys/devices/platform")
+            context = pyudev.Context()
 
-            if not platform_path.exists():
-                return devices
+            # Find all USB devices under vhci_hcd controllers
+            # VHCI ports map: port 0 -> devpath "1", port 1 -> devpath "2", etc.
+            target_devpath = str(self.port_number + 1)
 
-            # Search through vhci_hcd controllers
-            for vhci_dir in platform_path.glob("vhci_hcd.*"):
-                # Each controller has USB buses under it
-                for usb_bus in vhci_dir.glob("usb*"):
-                    bus_num = usb_bus.name.replace("usb", "")
-
-                    # Look for the port device: format is typically {busnum}-{port}
-                    # VHCI ports map directly:
-                    #   port 0 -> {busnum}-1, port 1 -> {busnum}-2, etc.
-                    # The device path is {busnum}-{port_number+1}
-                    port_num = self.port_number + 1
-                    device_path = usb_bus / f"{bus_num}-{port_num}"
-                    if device_path.exists():
-                        # Verify this is actually the right port by checking devpath
-                        devpath_file = device_path / "devpath"
-                        if devpath_file.exists():
-                            devpath = devpath_file.read_text().strip()
-                            # devpath should match our port number
-                            if devpath != str(port_num):
-                                logger.debug(
-                                    f"Port {self.port_number}: Skipping {device_path}"
-                                    f" - devpath={devpath} doesn't match expected"
-                                    f" {port_num}"
-                                )
-                                continue
-
-                        found_devices = self._find_dev_files(device_path)
+            # Search for USB devices with subsystem 'usb' and device type 'usb_device'
+            for device in context.list_devices(subsystem="usb", DEVTYPE="usb_device"):
+                # Check if this device is under a vhci_hcd controller
+                if "vhci_hcd" in device.sys_path:
+                    # Check the devpath attribute to match our port
+                    devpath = device.attributes.get("devpath")
+                    if devpath and devpath.decode("utf-8").strip() == target_devpath:
+                        logger.debug(
+                            f"Port {self.port_number}: Found device "
+                            f"at {device.sys_path}"
+                        )
+                        found_devices = self._find_dev_files(
+                            context, Path(device.sys_path)
+                        )
                         devices.extend(found_devices)
                         if devices:
                             return devices
@@ -89,65 +77,33 @@ class Port:
 
         return devices
 
-    def _find_dev_files(self, sys_device_path: Path) -> list[str]:
-        """Find /dev files associated with a sysfs device path.
+    def _find_dev_files(
+        self, context: pyudev.Context, sys_device_path: Path
+    ) -> list[str]:
+        """Find /dev files associated with a sysfs device path using pyudev.
 
         Args:
+            context: pyudev Context object
             sys_device_path: Path to device in /sys/bus/usb/devices/
 
         Returns:
             List of /dev file paths
         """
         dev_files = set()
-        visited = set()
-
-        def _query_path(path: Path, depth: int = 0) -> None:
-            """Recursively query a sysfs path and its children for device files."""
-            # Limit recursion depth to prevent issues
-            if depth > 10:
-                return
-
-            try:
-                # Resolve symlinks and check if we've visited this path
-                real_path = path.resolve()
-                if real_path in visited:
-                    return
-                visited.add(real_path)
-
-                # Check if this directory has a device node
-                if (path / "dev").exists():
-                    result = run_command(
-                        ["udevadm", "info", "-q", "name", "-p", str(path)],
-                        check=False,
-                    )
-                    dev_name = result.stdout.strip()
-                    if dev_name and not dev_name.startswith("/sys"):
-                        dev_path = (
-                            f"/dev/{dev_name}"
-                            if not dev_name.startswith("/")
-                            else dev_name
-                        )
-                        dev_files.add(dev_path)
-
-                # Recursively check immediate children, but skip subdirectories
-                # that represent other USB devices (have a busnum file)
-                if path.is_dir():
-                    for child in path.iterdir():
-                        if child.is_dir() and not child.is_symlink():
-                            # Skip if this looks like another USB device
-                            # (USB devices have files like busnum, devnum, etc.)
-                            # But we want to descend into interface directories
-                            # (which have names like 1-1:1.0)
-                            if (child / "busnum").exists():
-                                # This is another USB device, skip it
-                                continue
-                            _query_path(child, depth + 1)
-
-            except Exception as e:
-                logger.debug(f"Error querying {path}: {e}")
 
         try:
-            _query_path(sys_device_path)
+            # Create a device from the sysfs path
+            base_device = pyudev.Devices.from_path(context, str(sys_device_path))
+
+            # Get all child devices with device nodes
+            for device in context.list_devices(parent=base_device):
+                if device.device_node:
+                    dev_files.add(device.device_node)
+
+            # Also check if the base device itself has a device node
+            if base_device.device_node:
+                dev_files.add(base_device.device_node)
+
         except Exception as e:
             logger.debug(f"Error finding dev files for {sys_device_path}: {e}")
 
