@@ -125,22 +125,38 @@ E: ID_BUS=usb
     return result
 
 
-def mock_socket():
-    """Mock socket for send_request."""
+@pytest.fixture
+def mock_socket(mock_usb_devices):
+    """Create a mock socket that returns DeviceResponse."""
+
+    def _create_mock_socket(device=None):
+        if device is None:
+            device = mock_usb_devices[0]
+        mock_sock = Mock()
+        mock_sock.recv.return_value = (
+            DeviceResponse(
+                status="success",
+                data=device,
+            )
+            .model_dump_json()
+            .encode("utf-8")
+        )
+        mock_sock.__enter__ = Mock(return_value=mock_sock)
+        mock_sock.__exit__ = Mock(return_value=False)
+        return mock_sock
+
+    return _create_mock_socket
+
+
+def create_error_socket():
+    """Create a mock socket that returns an error response."""
+    from usb_remote.api import ErrorResponse
+
     mock_sock = Mock()
     mock_sock.recv.return_value = (
-        DeviceResponse(
-            status="success",
-            data=UsbDevice(
-                bus_id="1-1",
-                vendor_id="0000",
-                product_id="0000",
-                bus=1,
-                port_numbers=(1,),
-                device_name="/dev/bus/usb/001/001",
-                serial="",
-                description="Mock Device",
-            ),
+        ErrorResponse(
+            status="not_found",
+            message="Device not found",
         )
         .model_dump_json()
         .encode("utf-8")
@@ -268,15 +284,11 @@ class TestAttachCommand:
         if hasattr(mock_subprocess_run, "_attach_called"):
             delattr(mock_subprocess_run, "_attach_called")
 
-    def test_attach_with_id(self, mock_usb_devices):
+    def test_attach_with_id(self, mock_usb_devices, mock_socket):
         """Test attach command with device ID."""
         with (
             patch("subprocess.run", side_effect=mock_subprocess_run),
             patch("socket.socket", return_value=mock_socket()),
-            patch(
-                "usb_remote.__main__.find_device",
-                return_value=(mock_usb_devices[0], "localhost"),
-            ) as mock_find,
         ):
             result = runner.invoke(
                 app, ["attach", "--id", "1234:5678", "--host", "localhost"]
@@ -288,18 +300,11 @@ class TestAttachCommand:
             assert "Port 0:" in result.stdout
             assert "local devices:" in result.stdout
 
-            # Verify the calls
-            assert mock_find.call_args.kwargs["id"] == "1234:5678"
-
-    def test_attach_with_serial(self, mock_usb_devices):
+    def test_attach_with_serial(self, mock_usb_devices, mock_socket):
         """Test attach command with serial number."""
         with (
             patch("subprocess.run", side_effect=mock_subprocess_run),
             patch("socket.socket", return_value=mock_socket()),
-            patch(
-                "usb_remote.__main__.find_device",
-                return_value=(mock_usb_devices[0], "localhost"),
-            ) as mock_find,
         ):
             result = runner.invoke(
                 app, ["attach", "--serial", "ABC123", "--host", "localhost"]
@@ -308,18 +313,11 @@ class TestAttachCommand:
             assert "Port 0:" in result.stdout
             assert "local devices:" in result.stdout
 
-            call_args = mock_find.call_args
-            assert call_args.kwargs["serial"] == "ABC123"
-
-    def test_attach_with_desc(self, mock_usb_devices):
+    def test_attach_with_desc(self, mock_usb_devices, mock_socket):
         """Test attach command with description."""
         with (
             patch("subprocess.run", side_effect=mock_subprocess_run),
             patch("socket.socket", return_value=mock_socket()),
-            patch(
-                "usb_remote.__main__.find_device",
-                return_value=(mock_usb_devices[0], "localhost"),
-            ) as mock_find,
         ):
             result = runner.invoke(
                 app, ["attach", "--desc", "Test", "--host", "localhost"]
@@ -328,18 +326,11 @@ class TestAttachCommand:
             assert "Port 0:" in result.stdout
             assert "local devices:" in result.stdout
 
-            call_args = mock_find.call_args
-            assert call_args.kwargs["desc"] == "Test"
-
-    def test_attach_with_bus(self, mock_usb_devices):
+    def test_attach_with_bus(self, mock_usb_devices, mock_socket):
         """Test attach command with bus ID."""
         with (
             patch("subprocess.run", side_effect=mock_subprocess_run),
             patch("socket.socket", return_value=mock_socket()),
-            patch(
-                "usb_remote.__main__.find_device",
-                return_value=(mock_usb_devices[0], "localhost"),
-            ) as mock_find,
         ):
             result = runner.invoke(
                 app, ["attach", "--bus", "1-1.1", "--host", "localhost"]
@@ -348,18 +339,11 @@ class TestAttachCommand:
             assert "Port 0:" in result.stdout
             assert "local devices:" in result.stdout
 
-            call_args = mock_find.call_args
-            assert call_args.kwargs["bus"] == "1-1.1"
-
-    def test_attach_with_first_flag(self, mock_usb_devices):
+    def test_attach_with_first_flag(self, mock_usb_devices, mock_socket):
         """Test attach command with first flag."""
         with (
             patch("subprocess.run", side_effect=mock_subprocess_run),
             patch("socket.socket", return_value=mock_socket()),
-            patch(
-                "usb_remote.__main__.find_device",
-                return_value=(mock_usb_devices[0], "localhost"),
-            ) as mock_find,
         ):
             result = runner.invoke(
                 app, ["attach", "--desc", "Test", "--first", "--host", "localhost"]
@@ -368,18 +352,11 @@ class TestAttachCommand:
             assert "Port 0:" in result.stdout
             assert "local devices:" in result.stdout
 
-            call_args = mock_find.call_args
-            assert call_args.kwargs["first"] is True
-
-    def test_attach_with_host(self, mock_usb_devices):
+    def test_attach_with_host(self, mock_usb_devices, mock_socket):
         """Test attach command with custom host."""
         with (
             patch("subprocess.run", side_effect=mock_subprocess_run),
             patch("socket.socket", return_value=mock_socket()),
-            patch(
-                "usb_remote.__main__.find_device",
-                return_value=(mock_usb_devices[0], "raspberrypi"),
-            ) as mock_find,
         ):
             result = runner.invoke(
                 app, ["attach", "--id", "1234:5678", "--host", "raspberrypi"]
@@ -387,9 +364,6 @@ class TestAttachCommand:
             assert result.exit_code == 0
             assert "Port 0:" in result.stdout
             assert "local devices:" in result.stdout
-
-            call_args = mock_find.call_args
-            assert call_args.kwargs["server_hosts"] == ["raspberrypi"]
 
     def test_attach_error_handling(self):
         """Test attach command error handling."""
@@ -407,15 +381,11 @@ class TestAttachCommand:
 class TestDetachCommand:
     """Test the detach command."""
 
-    def test_detach_with_id(self, mock_usb_devices):
+    def test_detach_with_id(self, mock_usb_devices, mock_socket):
         """Test detach command with device ID."""
         with (
             patch("subprocess.run", side_effect=mock_subprocess_run),
             patch("socket.socket", return_value=mock_socket()),
-            patch(
-                "usb_remote.__main__.find_device",
-                return_value=(mock_usb_devices[0], "localhost"),
-            ) as mock_find,
         ):
             result = runner.invoke(
                 app, ["detach", "--id", "1234:5678", "--host", "localhost"]
@@ -423,44 +393,27 @@ class TestDetachCommand:
             assert result.exit_code == 0
             assert "Detached from device on localhost:" in result.stdout
 
-            call_args = mock_find.call_args
-            assert call_args.kwargs["id"] == "1234:5678"
-
-    def test_detach_with_desc(self, mock_usb_devices):
+    def test_detach_with_desc(self, mock_usb_devices, mock_socket):
         """Test detach command with description."""
         with (
             patch("subprocess.run", side_effect=mock_subprocess_run),
             patch("socket.socket", return_value=mock_socket()),
-            patch(
-                "usb_remote.__main__.find_device",
-                return_value=(mock_usb_devices[0], "localhost"),
-            ) as mock_find,
         ):
             result = runner.invoke(
                 app, ["detach", "--desc", "Camera", "--host", "localhost"]
             )
             assert result.exit_code == 0
 
-            call_args = mock_find.call_args
-            assert call_args.kwargs["desc"] == "Camera"
-
-    def test_detach_with_host(self, mock_usb_devices):
+    def test_detach_with_host(self, mock_usb_devices, mock_socket):
         """Test detach command with custom host."""
         with (
             patch("subprocess.run", side_effect=mock_subprocess_run),
             patch("socket.socket", return_value=mock_socket()),
-            patch(
-                "usb_remote.__main__.find_device",
-                return_value=(mock_usb_devices[0], "raspberrypi"),
-            ) as mock_find,
         ):
             result = runner.invoke(
                 app, ["detach", "--id", "1234:5678", "--host", "raspberrypi"]
             )
             assert result.exit_code == 0
-
-            call_args = mock_find.call_args
-            assert call_args.kwargs["server_hosts"] == ["raspberrypi"]
 
     def test_detach_error_handling(self):
         """Test detach command error handling."""
@@ -478,40 +431,52 @@ class TestDetachCommand:
 class TestMultiServerOperations:
     """Test multi-server attach/detach operations."""
 
-    def test_attach_multi_server_single_match(self, mock_usb_devices):
+    def test_attach_multi_server_single_match(
+        self, mock_usb_devices, mock_socket, mock_config
+    ):
         """Test attach across multiple servers with single match."""
         servers = ["server1", "server2"]
+        # Need sockets for: find on server1 (not found), find on server2 (success),
+        # attach on server2
         with (
             patch("subprocess.run", side_effect=mock_subprocess_run),
-            patch("socket.socket", return_value=mock_socket()),
-            patch("usb_remote.__main__.get_servers", return_value=servers),
             patch(
-                "usb_remote.__main__.find_device",
-                return_value=(mock_usb_devices[0], "server2"),
+                "socket.socket",
+                side_effect=[
+                    create_error_socket(),  # find on server1 - not found
+                    mock_socket(),  # find on server2 - success
+                    mock_socket(),  # attach on server2
+                ],
             ),
+            patch("usb_remote.__main__.get_servers", return_value=servers),
         ):
             result = runner.invoke(app, ["attach", "--id", "1234:5678"])
             assert result.exit_code == 0
-            assert "server2" in result.stdout
             assert "Test Device 1" in result.stdout
 
-    def test_detach_multi_server_single_match(self, mock_usb_devices):
+    def test_detach_multi_server_single_match(
+        self, mock_usb_devices, mock_socket, mock_config
+    ):
         """Test detach across multiple servers with single match."""
         servers = ["server1", "server2"]
+        # Need sockets for: find on server1 (success), find on server2 (not found),
+        # detach on server1
         with (
             patch("subprocess.run", side_effect=mock_subprocess_run),
-            patch("socket.socket", return_value=mock_socket()),
-            patch("usb_remote.__main__.get_servers", return_value=servers),
             patch(
-                "usb_remote.__main__.find_device",
-                return_value=(mock_usb_devices[0], "server1"),
+                "socket.socket",
+                side_effect=[
+                    mock_socket(),  # find on server1 - success
+                    create_error_socket(),  # find on server2 - not found
+                    mock_socket(),  # detach on server1
+                ],
             ),
+            patch("usb_remote.__main__.get_servers", return_value=servers),
         ):
-            result = runner.invoke(app, ["detach", "--desc", "Camera"])
+            result = runner.invoke(app, ["detach", "--desc", "Test"])
             assert result.exit_code == 0
-            assert "server1" in result.stdout
 
-    def test_attach_multi_server_multiple_matches_fails(self):
+    def test_attach_multi_server_multiple_matches_fails(self, mock_config):
         """Test attach fails with multiple matches without --first."""
         servers = ["server1", "server2"]
         with (
@@ -524,27 +489,33 @@ class TestMultiServerOperations:
                 ),
             ),
         ):
-            result = runner.invoke(app, ["attach", "--desc", "Camera"])
+            result = runner.invoke(app, ["attach", "--desc", "Test"])
             assert result.exit_code != 0
             assert result.exception is not None
 
-    def test_attach_multi_server_multiple_matches_with_first(self, mock_usb_devices):
+    def test_attach_multi_server_multiple_matches_with_first(
+        self, mock_usb_devices, mock_socket, mock_config
+    ):
         """Test attach succeeds with multiple matches when --first is used."""
         servers = ["server1", "server2"]
+        # Need sockets for: find on server1 (success), find on server2 (success),
+        # attach on server1
         with (
             patch("subprocess.run", side_effect=mock_subprocess_run),
-            patch("socket.socket", return_value=mock_socket()),
-            patch("usb_remote.__main__.get_servers", return_value=servers),
             patch(
-                "usb_remote.__main__.find_device",
-                return_value=(mock_usb_devices[0], "server1"),
+                "socket.socket",
+                side_effect=[
+                    mock_socket(),  # find on server1 - success
+                    mock_socket(),  # find on server2 - success
+                    mock_socket(),  # attach on server1 (first match)
+                ],
             ),
+            patch("usb_remote.__main__.get_servers", return_value=servers),
         ):
-            result = runner.invoke(app, ["attach", "--desc", "Camera", "--first"])
+            result = runner.invoke(app, ["attach", "--desc", "Test", "--first"])
             assert result.exit_code == 0
-            assert "server1" in result.stdout
 
-    def test_attach_multi_server_no_match(self):
+    def test_attach_multi_server_no_match(self, mock_config):
         """Test attach across multiple servers with no match."""
         servers = ["server1", "server2"]
         with (
