@@ -37,6 +37,7 @@ class ClientDeviceResponse(StrictBaseModel):
     status: Literal["success", "failure"]
     data: UsbDevice
     server: str
+    local_devices: list[str] = []
 
 
 error_response = "error"

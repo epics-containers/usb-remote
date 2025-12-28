@@ -18,6 +18,7 @@ from .client_api import (
     not_found_response,
 )
 from .config import get_servers
+from .port import Port
 from .usbdevice import DeviceNotFoundError, MultipleDevicesError
 
 logger = logging.getLogger(__name__)
@@ -144,15 +145,32 @@ class ClientService:
         )
 
         # Then perform the requested action
+        local_devices = []
         match args.command:
             case "attach":
                 logger.info(f"Attaching device {device.bus_id} from {server}")
                 attach_device(device.bus_id, server)
+                # Discover the local port for the attached device
+                local_port = Port.get_port_by_remote_busid(
+                    device.bus_id, server, retries=20
+                )
+                if local_port:
+                    local_devices = local_port.local_devices
+                    logger.info(
+                        f"Device attached on local port {local_port.port} "
+                        f"with devices: {local_devices}"
+                    )
+                else:
+                    logger.warning(
+                        "Local device files not found (may still be initializing)"
+                    )
             case "detach":
                 logger.info(f"Detaching device {device.bus_id} from {server}")
                 detach_device(device.bus_id, server)
 
-        return ClientDeviceResponse(status="success", data=device, server=server)
+        return ClientDeviceResponse(
+            status="success", data=device, server=server, local_devices=local_devices
+        )
 
     def _send_response(
         self,
