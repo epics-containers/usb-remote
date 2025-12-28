@@ -61,13 +61,27 @@ class Port:
                     # Look for the port device: format is typically {busnum}-{port}
                     # VHCI ports map directly:
                     #   port 0 -> {busnum}-1, port 1 -> {busnum}-2, etc.
-                    # Try different port numbering schemes
-                    for port_num in [self.port_number, self.port_number + 1]:
-                        device_path = usb_bus / f"{bus_num}-{port_num}"
-                        if device_path.exists():
-                            devices.extend(self._find_dev_files(device_path))
-                            if devices:
-                                return devices
+                    # The device path is {busnum}-{port_number+1}
+                    port_num = self.port_number + 1
+                    device_path = usb_bus / f"{bus_num}-{port_num}"
+                    if device_path.exists():
+                        # Verify this is actually the right port by checking devpath
+                        devpath_file = device_path / "devpath"
+                        if devpath_file.exists():
+                            devpath = devpath_file.read_text().strip()
+                            # devpath should match our port number
+                            if devpath != str(port_num):
+                                logger.debug(
+                                    f"Port {self.port_number}: Skipping {device_path}"
+                                    f" - devpath={devpath} doesn't match expected"
+                                    f" {port_num}"
+                                )
+                                continue
+
+                        found_devices = self._find_dev_files(device_path)
+                        devices.extend(found_devices)
+                        if devices:
+                            return devices
 
             # Fallback: search /sys/bus/usb/devices and check driver
             sys_usb_path = Path("/sys/bus/usb/devices")
@@ -137,10 +151,18 @@ class Port:
                         )
                         dev_files.add(dev_path)
 
-                # Recursively check immediate children
+                # Recursively check immediate children, but skip subdirectories
+                # that represent other USB devices (have a busnum file)
                 if path.is_dir():
                     for child in path.iterdir():
                         if child.is_dir() and not child.is_symlink():
+                            # Skip if this looks like another USB device
+                            # (USB devices have files like busnum, devnum, etc.)
+                            # But we want to descend into interface directories
+                            # (which have names like 1-1:1.0)
+                            if (child / "busnum").exists():
+                                # This is another USB device, skip it
+                                continue
                             _query_path(child, depth + 1)
 
             except Exception as e:
