@@ -95,14 +95,38 @@ class Port:
             # Create a device from the sysfs path
             base_device = pyudev.Devices.from_path(context, str(sys_device_path))
 
-            # Get all child devices with device nodes
-            for device in context.list_devices(parent=base_device):
-                if device.device_node:
-                    dev_files.add(device.device_node)
+            # Wait for child devices to stabilize by polling until the device count
+            # stops changing (e.g., block devices, partitions being created)
+            max_attempts = 10
+            stable_count = 0
+            previous_count = 0
 
-            # Also check if the base device itself has a device node
-            if base_device.device_node:
-                dev_files.add(base_device.device_node)
+            for _ in range(max_attempts):
+                current_files = set()
+
+                # Get all child devices with device nodes
+                for device in context.list_devices(parent=base_device):
+                    if device.device_node:
+                        current_files.add(device.device_node)
+
+                # Also check if the base device itself has a device node
+                if base_device.device_node:
+                    current_files.add(base_device.device_node)
+
+                # Check if the count has stabilized
+                if len(current_files) == previous_count:
+                    stable_count += 1
+                    # If stable for 2 consecutive checks, we're done
+                    if stable_count >= 2:
+                        dev_files = current_files
+                        break
+                else:
+                    stable_count = 0
+                    previous_count = len(current_files)
+                    dev_files = current_files
+
+                # Small delay between polls
+                sleep(0.1)
 
         except Exception as e:
             logger.debug(f"Error finding dev files for {sys_device_path}: {e}")
