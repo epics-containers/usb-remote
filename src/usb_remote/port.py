@@ -54,7 +54,7 @@ class Port:
 
             # Search through vhci_hcd controllers
             for vhci_dir in platform_path.glob("vhci_hcd.*"):
-                # Each controller has USB busses under it
+                # Each controller has USB buses under it
                 for usb_bus in vhci_dir.glob("usb*"):
                     bus_num = usb_bus.name.replace("usb", "")
 
@@ -82,28 +82,6 @@ class Port:
                         devices.extend(found_devices)
                         if devices:
                             return devices
-
-            # Fallback: search /sys/bus/usb/devices and check driver
-            sys_usb_path = Path("/sys/bus/usb/devices")
-            if sys_usb_path.exists():
-                for usb_device in sys_usb_path.iterdir():
-                    if not usb_device.is_symlink():
-                        continue
-
-                    # Check if device path contains vhci_hcd
-                    real_path = usb_device.resolve()
-                    if "vhci_hcd" in str(real_path):
-                        # Check port via devpath
-                        devpath_file = usb_device / "devpath"
-                        if devpath_file.exists():
-                            devpath = devpath_file.read_text().strip()
-                            if devpath == str(self.port_number) or devpath == str(
-                                self.port_number + 1
-                            ):
-                                devices.extend(self._find_dev_files(usb_device))
-                                if devices:
-                                    return devices
-
         except Exception as e:
             logger.debug(
                 f"Error finding local devices for port {self.port_number}: {e}"
