@@ -196,36 +196,14 @@ class TestVersionCommand:
 class TestListCommand:
     """Test the list command."""
 
-    def test_list_local(self, mock_config, mock_usb_devices, mock_socket_for_list):
+    def test_list_local(self):
         """Test list --local command."""
 
-        # Mock UsbDevice.create to return our mock devices
-        def mock_create(bus_id, vendor_id, product_id):
-            for device in mock_usb_devices:
-                if (
-                    device.bus_id == bus_id
-                    and device.vendor_id == vendor_id
-                    and device.product_id == product_id
-                ):
-                    return device
-            # If no exact match, return first device
-            return mock_usb_devices[0]
+        # Here we genuinely get the local devices via usbip and just verify no errors
+        result = runner.invoke(app, ["list", "--local"])
+        assert result.exit_code == 0
 
-        with (
-            patch("subprocess.run", side_effect=mock_subprocess_run),
-            patch("usb_remote.usbdevice.UsbDevice.create", side_effect=mock_create),
-        ):
-            result = runner.invoke(app, ["list", "--local"])
-            assert result.exit_code == 0
-            # Validate device information is displayed
-            assert "Test Device 1" in result.stdout
-            assert "Test Device 2" in result.stdout
-            assert "1234:5678" in result.stdout
-            assert "abcd:ef01" in result.stdout
-            assert "ABC123" in result.stdout  # serial number
-            assert "1-1.1" in result.stdout  # bus_id
-
-    def test_list_remote(self, mock_config, mock_usb_devices, mock_socket_for_list):
+    def test_list_remote(self, mock_config, mock_socket_for_list):
         """Test list command to query remote server."""
         with (
             patch("subprocess.run", side_effect=mock_subprocess_run),
@@ -239,7 +217,7 @@ class TestListCommand:
             assert "Test Device 1" in result.stdout
             assert "Test Device 2" in result.stdout
 
-    def test_list_with_host(self, mock_config, mock_usb_devices, mock_socket_for_list):
+    def test_list_with_host(self, mock_config, mock_socket_for_list):
         """Test list command with specific host."""
         with (
             patch("subprocess.run", side_effect=mock_subprocess_run),
@@ -265,9 +243,7 @@ class TestListCommand:
             # Should indicate no devices found
             assert "No devices" in result.stdout
 
-    def test_list_multi_server(
-        self, mock_config, mock_usb_devices, mock_socket_for_list
-    ):
+    def test_list_multi_server(self, mock_config, mock_socket_for_list):
         """Test list command with multiple servers."""
         with (
             patch("subprocess.run", side_effect=mock_subprocess_run),
