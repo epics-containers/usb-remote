@@ -9,6 +9,9 @@ from usb_remote.api import DeviceResponse, ErrorResponse, ListResponse
 from usb_remote.config import UsbRemoteConfig
 from usb_remote.usbdevice import UsbDevice
 
+# Load system integration test fixtures from conftest_system.py
+pytest_plugins = ["tests.conftest_system"]
+
 
 @pytest.fixture
 def mock_config():

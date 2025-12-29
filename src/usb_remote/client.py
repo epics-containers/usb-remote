@@ -13,13 +13,15 @@ from .api import (
     detach_command,
     find_command,
 )
-from .config import SERVER_PORT, get_timeout
+from .config import get_server_port, get_timeout
 from .port import Port
 from .usbdevice import DeviceNotFoundError, MultipleDevicesError, UsbDevice
 from .utility import run_command
 
 logger = logging.getLogger(__name__)
 
+# Will be fetched from config when needed
+SERVER_PORT = None
 # Default connection timeout in seconds
 DEFAULT_TIMEOUT = 2.0
 
@@ -27,7 +29,7 @@ DEFAULT_TIMEOUT = 2.0
 def send_request(
     request: ListRequest | DeviceRequest,
     server_host: str = "localhost",
-    server_port: int = SERVER_PORT,
+    server_port: int | None = None,
     timeout: float | None = None,
 ) -> ListResponse | DeviceResponse:
     """
@@ -49,6 +51,9 @@ def send_request(
         TimeoutError: If connection or receive times out
         OSError: If connection fails
     """
+    if server_port is None:
+        server_port = get_server_port()
+
     logger.debug(f"Connecting to server at {server_host}:{server_port}")
 
     if timeout is None:
