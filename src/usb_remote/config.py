@@ -22,6 +22,7 @@ class UsbRemoteConfig(BaseModel):
     servers: list[str] = Field(default_factory=list)
     server_ranges: list[str] = Field(default_factory=list)
     timeout: float = Field(default=DEFAULT_TIMEOUT, gt=0)
+    server_port: int = Field(default=SERVER_PORT)
     model_config = ConfigDict(extra="forbid")
 
     @classmethod
@@ -181,6 +182,17 @@ def get_timeout() -> float:
     config = get_config()
     logger.debug(f"Using timeout: {config.timeout}s")
     return config.timeout
+
+
+def get_server_port() -> int:
+    """
+    Read server port from config file.
+
+    Returns:
+        Server port number. Returns default if not configured.
+    """
+    config = get_config()
+    return config.server_port
 
 
 def save_servers(servers: list[str]) -> None:

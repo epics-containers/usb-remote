@@ -1,4 +1,5 @@
 import logging
+import os
 import socket
 import threading
 from typing import Literal
@@ -25,11 +26,13 @@ from .usbdevice import (
 )
 from .utility import run_command
 
+# Allow server port to be overridden via environment variable
+DEFAULT_SERVER_PORT = int(os.environ.get("USB_REMOTE_SERVER_PORT", SERVER_PORT))
 logger = logging.getLogger(__name__)
 
 
 class CommandServer:
-    def __init__(self, host: str = "0.0.0.0", port: int = SERVER_PORT):
+    def __init__(self, host: str = "0.0.0.0", port: int = DEFAULT_SERVER_PORT):
         self.host = host
         self.port = port
         self.server_socket = None
