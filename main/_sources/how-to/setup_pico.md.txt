@@ -67,3 +67,9 @@ def main():
 
 main()
 ```
+
+## Sample Results
+
+When the Pico is connected to a Raspberry Pi usb-remote server, it will display output similar to the following:
+
+![Pico displaying MAC address](./images/pico-mac.png)
