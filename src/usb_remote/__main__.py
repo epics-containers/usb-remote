@@ -16,7 +16,6 @@ from .config import (
     DEFAULT_CONFIG_PATH,
     discover_config_path,
     get_config,
-    get_servers,
     save_servers,
 )
 from .server import CommandServer
@@ -149,13 +148,7 @@ def list_command(
         for device in devices:
             typer.echo(device)
     else:
-        if host:
-            servers = [host]
-        else:
-            servers = get_servers()
-        if not servers:
-            logger.warning("No servers configured, defaulting to localhost")
-            servers = ["localhost"]
+        servers = get_host_list(host)
 
         logger.debug(f"Listing remote USB devices on hosts: {servers}")
 

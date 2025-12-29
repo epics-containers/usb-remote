@@ -17,6 +17,13 @@ servers:
   - 192.168.1.100
   - usb-server-1.local
 
+# IP ranges to automatically discover servers (optional)
+# Scans the range for servers listening on port 5055
+# Format: specify IP prefix and range of last octet (keeps scans fast)
+server_ranges:
+  - 192.168.2.31-36  # Scans 192.168.2.31 through 192.168.2.36
+  # - 192.168.1.50-60  # Scans 192.168.1.50 through 192.168.1.60
+
 # Connection timeout in seconds (default: 5.0)
 # Controls how long to wait when connecting to each server
 # Useful to prevent hanging when servers are unreachable

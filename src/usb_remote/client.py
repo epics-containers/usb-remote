@@ -4,7 +4,6 @@ import socket
 from pydantic import TypeAdapter
 
 from .api import (
-    PORT,
     DeviceRequest,
     DeviceResponse,
     ErrorResponse,
@@ -14,7 +13,7 @@ from .api import (
     detach_command,
     find_command,
 )
-from .config import get_timeout
+from .config import SERVER_PORT, get_timeout
 from .port import Port
 from .usbdevice import DeviceNotFoundError, MultipleDevicesError, UsbDevice
 from .utility import run_command
@@ -28,7 +27,7 @@ DEFAULT_TIMEOUT = 2.0
 def send_request(
     request: ListRequest | DeviceRequest,
     server_host: str = "localhost",
-    server_port: int = PORT,
+    server_port: int = SERVER_PORT,
     timeout: float | None = None,
 ) -> ListResponse | DeviceResponse:
     """

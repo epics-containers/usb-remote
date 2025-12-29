@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 logger = logging.getLogger(__name__)
 
@@ -13,12 +13,16 @@ DEFAULT_CONFIG_PATH = Path.home() / ".config" / "usb-remote" / "usb-remote.confi
 SYSTEMD_CONFIG_PATH = Path("/etc/usb-remote-client/usb-remote.config")
 DEFAULT_TIMEOUT = 5.0
 
+SERVER_PORT = 5055
+
 
 class UsbRemoteConfig(BaseModel):
     """Pydantic model for usb_remote configuration."""
 
     servers: list[str] = Field(default_factory=list)
+    server_ranges: list[str] = Field(default_factory=list)
     timeout: float = Field(default=DEFAULT_TIMEOUT, gt=0)
+    model_config = ConfigDict(extra="forbid")
 
     @classmethod
     def from_file(cls, config_path: Path) -> "UsbRemoteConfig":
@@ -149,6 +153,19 @@ def get_servers(config_path: Path | None = None) -> list[str]:
     config = get_config()
     logger.debug(f"Loaded {len(config.servers)} servers from config")
     return config.servers
+
+
+def get_server_ranges() -> list[str]:
+    """
+    Read list of server IP ranges from config file.
+
+    Returns:
+        List of IP ranges (e.g., ['192.168.1.30-192.168.1.40']).
+        Returns empty list if not configured.
+    """
+    config = get_config()
+    logger.debug(f"Loaded {len(config.server_ranges)} server ranges from config")
+    return config.server_ranges
 
 
 def get_timeout() -> float:

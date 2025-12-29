@@ -6,7 +6,6 @@ from typing import Literal
 from pydantic import TypeAdapter, ValidationError
 
 from .api import (
-    PORT,
     DeviceRequest,
     DeviceResponse,
     ErrorResponse,
@@ -16,6 +15,7 @@ from .api import (
     multiple_matches_response,
     not_found_response,
 )
+from .config import SERVER_PORT
 from .usbdevice import (
     DeviceNotFoundError,
     MultipleDevicesError,
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 class CommandServer:
-    def __init__(self, host: str = "0.0.0.0", port: int = PORT):
+    def __init__(self, host: str = "0.0.0.0", port: int = SERVER_PORT):
         self.host = host
         self.port = port
         self.server_socket = None

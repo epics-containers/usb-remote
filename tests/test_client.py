@@ -248,6 +248,7 @@ class TestMultiServerOperations:
                 ],
             ),
             patch("usb_remote.utility.get_servers", return_value=servers),
+            patch("usb_remote.utility.get_server_ranges", return_value=[]),
             patch("usb_remote.config.get_timeout", return_value=0.1),
         ):
             result = runner.invoke(app, ["attach", "--id", "1234:5678"])
@@ -270,6 +271,7 @@ class TestMultiServerOperations:
                 ],
             ),
             patch("usb_remote.utility.get_servers", return_value=servers),
+            patch("usb_remote.utility.get_server_ranges", return_value=[]),
             patch("usb_remote.config.get_timeout", return_value=0.1),
         ):
             result = runner.invoke(app, ["detach", "--desc", "Test"])
@@ -289,6 +291,7 @@ class TestMultiServerOperations:
                 ],
             ),
             patch("usb_remote.utility.get_servers", return_value=servers),
+            patch("usb_remote.utility.get_server_ranges", return_value=[]),
             patch("usb_remote.config.get_timeout", return_value=0.1),
         ):
             result = runner.invoke(app, ["attach", "--desc", "Test"])
@@ -313,6 +316,7 @@ class TestMultiServerOperations:
                 ],
             ),
             patch("usb_remote.utility.get_servers", return_value=servers),
+            patch("usb_remote.utility.get_server_ranges", return_value=[]),
             patch("usb_remote.config.get_timeout", return_value=0.1),
         ):
             result = runner.invoke(app, ["attach", "--desc", "Test", "--first"])
