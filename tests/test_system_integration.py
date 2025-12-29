@@ -13,7 +13,7 @@ import tempfile
 import threading
 import time
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -39,13 +39,6 @@ def mock_subprocess_run():
 
     def run_side_effect(command, *args, **kwargs):
         """Simulate subprocess.run behavior for USB/IP commands."""
-        " ".join(command) if isinstance(command, list) else str(command)
-        # Write to file to verify mock is called
-        with open("/tmp/mock_debug.log", "a") as f:
-            f.write(f"MOCK CALLED: {command!r}\n")
-        print(f"DEBUG MOCK: Command called: {command!r}", flush=True)
-        print(f"DEBUG MOCK: Command type: {type(command)}", flush=True)
-        print(f"DEBUG MOCK: Args: {args}, Kwargs: {kwargs}", flush=True)
 
         # Mock lsusb output for device enumeration
         if command[0] == "lsusb" and len(command) == 3 and command[1] == "-s":
@@ -88,12 +81,10 @@ Bus 002 Device 003: ID 0483:5740 STMicroelectronics Virtual COM Port
 
         # Mock usbip list -pl for device enumeration (used by get_devices)
         elif command[0] == "usbip" and "list" in command and "-pl" in command:
-            print("DEBUG MOCK: Matched usbip list -pl!", flush=True)
             # This returns parseable format: busid=X#usbid=vendor:product#
             usbip_output = (
                 "busid=1-1.1#usbid=2e8a:000a#\nbusid=2-2.1#usbid=0483:5740#\n"
             )
-            print(f"DEBUG MOCK: Returning usbip output: {usbip_output!r}", flush=True)
             return subprocess.CompletedProcess(
                 args=command,
                 returncode=0,
@@ -173,10 +164,6 @@ Bus 002 Device 003: ID 0483:5740 STMicroelectronics Virtual COM Port
             )
 
         # Default: return success for any other command
-        print(
-            f"DEBUG MOCK: No condition matched, returning empty result for: {command!r}",
-            flush=True,
-        )
         return subprocess.CompletedProcess(
             args=command,
             returncode=0,
@@ -184,69 +171,72 @@ Bus 002 Device 003: ID 0483:5740 STMicroelectronics Virtual COM Port
             stderr="",
         )
 
-    # Test that the mock is set up correctly
-    print("DEBUG: Setting up subprocess.run mock")
-
-    with patch("subprocess.run", side_effect=run_side_effect) as mock_run:
+    with patch("subprocess.run", side_effect=run_side_effect):
         # Also patch it in the utility module since that's where run_command imports it
-        with patch("usb_remote.utility.subprocess.run", side_effect=run_side_effect):
-            print("DEBUG: Mock patches applied")
-
+        # Use the same side_effect so both patches behave the same way
+        with patch(
+            "usb_remote.utility.subprocess.run", side_effect=run_side_effect
+        ) as mock_run2:
             # Mock usb.core.find to return fake USB device objects
             def mock_usb_find(
-                idVendor=None,
-                idProduct=None,
+                idVendor=None,  # noqa: N803
+                idProduct=None,  # noqa: N803
                 bus=None,
-                custom_match=None,  # type: ignore
+                custom_match=None,
             ):
                 """Mock usb.core.find to return a fake USB device."""
-                print(
-                    f"DEBUG USB MOCK: Called with idVendor={idVendor:#x} if idVendor "
-                    f"else None, idProduct={idProduct:#x} if idProduct else None, "
-                    f"bus={bus}, custom_match={custom_match}",
-                    flush=True,
-                )
+                import usb.core
 
-                # Create a mock USB device with the requested properties
-                mock_device = MagicMock()
-                mock_device.bus = bus if bus else 1
-                mock_device.address = 2  # Device address on the bus
-                mock_device.port_numbers = (1, 1)  # Port numbers for busid 1-1.1
+                # Create a mock USB device that inherits from usb.core.Device
+                # This is needed to pass the `type(device) is usb.core.Device` check
+                class MockUSBDevice(usb.core.Device):
+                    def __init__(self, bus, address, port_numbers, serial_number):
+                        # Don't call parent __init__ as it requires real USB device
+                        # Set attributes directly on __dict__ to bypass property
+                        # descriptors
+                        self.__dict__["bus"] = bus
+                        self.__dict__["address"] = address
+                        self.__dict__["port_numbers"] = port_numbers
+                        self.__dict__["serial_number"] = serial_number
 
-                # Set vendor/product based on what was requested
+                # Determine which device to create based on vendor/product
                 if idVendor == 0x2E8A and idProduct == 0x000A:
-                    print("DEBUG USB MOCK: Matched Raspberry Pi Pico", flush=True)
-                    mock_device.serial_number = "E12345678901234"
-                    mock_device.port_numbers = (1, 1)
+                    mock_device = MockUSBDevice(
+                        bus=bus if bus else 1,
+                        address=2,
+                        port_numbers=(1, 1),
+                        serial_number="E12345678901234",
+                    )
+                    # Override __class__ so type() returns usb.core.Device
+                    mock_device.__class__ = usb.core.Device
                 elif idVendor == 0x0483 and idProduct == 0x5740:
-                    print("DEBUG USB MOCK: Matched STM device", flush=True)
-                    mock_device.serial_number = "ABC123456789"
-                    mock_device.port_numbers = (2, 1)
-                    mock_device.bus = 2
-                    mock_device.address = 3
+                    mock_device = MockUSBDevice(
+                        bus=2,
+                        address=3,
+                        port_numbers=(2, 1),
+                        serial_number="ABC123456789",
+                    )
+                    # Override __class__ so type() returns usb.core.Device
+                    mock_device.__class__ = usb.core.Device
                 else:
-                    print("DEBUG USB MOCK: No match for vendor/product", flush=True)
-                    mock_device.serial_number = ""
+                    mock_device = MockUSBDevice(
+                        bus=bus if bus else 1,
+                        address=2,
+                        port_numbers=(1, 1),
+                        serial_number="",
+                    )
+                    # Override __class__ so type() returns usb.core.Device
+                    mock_device.__class__ = usb.core.Device
 
                 # Verify custom_match if provided
-                if custom_match:
-                    match_result = custom_match(mock_device)
-                    print(
-                        f"DEBUG USB MOCK: custom_match returned {match_result}",
-                        flush=True,
-                    )
-                    if not match_result:
-                        return None
+                if custom_match and not custom_match(mock_device):
+                    return None
 
-                print(
-                    f"DEBUG USB MOCK: Returning device with bus={mock_device.bus},"
-                    f" port_numbers={mock_device.port_numbers}",
-                    flush=True,
-                )
                 return mock_device
 
             with patch("usb.core.find", side_effect=mock_usb_find):
-                yield mock_run
+                # Yield the utility mock since that's where actual calls go through
+                yield mock_run2
 
 
 @pytest.fixture
@@ -319,22 +309,19 @@ def client_service_instance(
             service.start()
         except Exception as e:
             service_exception = e
-            print(f"DEBUG: Exception in service.start(): {e}")
             import traceback
 
             traceback.print_exc()
 
     service = ClientService(socket_path=socket_path)
-    print(f"DEBUG: ClientService created with socket_path={socket_path}")
 
     # Start client service in a background thread
     service_thread = threading.Thread(target=start_with_exception_handling, daemon=True)
     service_thread.start()
-    print("DEBUG: Client service thread started")
 
     # Wait for service to start
     max_attempts = 50
-    for attempt in range(max_attempts):
+    for _ in range(max_attempts):
         # Check if service thread hit an exception
         if service_exception is not None:
             raise RuntimeError(
@@ -342,20 +329,15 @@ def client_service_instance(
             ) from service_exception
 
         if Path(socket_path).exists():
-            print(f"DEBUG: Socket file exists at attempt {attempt}")
             # Try to connect to verify it's ready
             try:
                 with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
                     sock.settimeout(0.1)
                     sock.connect(socket_path)
-                    print("DEBUG: Successfully connected to socket")
                     break
-            except (TimeoutError, ConnectionRefusedError, FileNotFoundError) as e:
-                print(f"DEBUG: Connection failed at attempt {attempt}: {e}")
+            except (TimeoutError, ConnectionRefusedError, FileNotFoundError):
                 time.sleep(0.1)
         else:
-            if attempt % 10 == 0:
-                print(f"DEBUG: Socket file doesn't exist yet at attempt {attempt}")
             time.sleep(0.1)
     else:
         # Check if socket file was even created
@@ -381,6 +363,7 @@ def client_service_instance(
 class TestSystemIntegration:
     """System integration tests with real server and client service."""
 
+    @pytest.mark.filterwarnings("ignore::pytest.PytestUnhandledThreadExceptionWarning")
     def test_attach_via_client_service(
         self,
         server_instance,
@@ -431,10 +414,11 @@ class TestSystemIntegration:
         bind_calls = [
             call
             for call in mock_subprocess_run.call_args_list
-            if call[0][0][0] == "sudo"
-            and len(call[0][0]) > 2
-            and call[0][0][1] == "usbip"
-            and call[0][0][2] == "bind"
+            if len(call.args) > 0
+            and len(call.args[0]) > 2
+            and call.args[0][0] == "sudo"
+            and call.args[0][1] == "usbip"
+            and call.args[0][2] == "bind"
         ]
         assert len(bind_calls) >= 1, "Server should have called usbip bind"
 
@@ -442,9 +426,10 @@ class TestSystemIntegration:
         attach_calls = [
             call
             for call in mock_subprocess_run.call_args_list
-            if call[0][0][0] == "sudo"
-            and len(call[0][0]) > 2
-            and call[0][0][1] == "usbip"
-            and call[0][0][2] == "attach"
+            if len(call.args) > 0
+            and len(call.args[0]) > 2
+            and call.args[0][0] == "sudo"
+            and call.args[0][1] == "usbip"
+            and call.args[0][2] == "attach"
         ]
         assert len(attach_calls) >= 1, "Client should have called usbip attach"
