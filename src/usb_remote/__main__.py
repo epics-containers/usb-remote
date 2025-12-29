@@ -2,6 +2,8 @@
 
 import logging
 from collections.abc import Sequence
+from enum import Enum
+from typing import Annotated
 
 import typer
 
@@ -9,6 +11,7 @@ from usb_remote.port import Port
 
 from . import __version__
 from .client import attach_device, detach_device, find_device, list_devices
+from .client_service import ClientService
 from .config import (
     DEFAULT_CONFIG_PATH,
     discover_config_path,
@@ -19,6 +22,7 @@ from .config import (
 from .server import CommandServer
 from .service import install_systemd_service, uninstall_systemd_service
 from .usbdevice import get_devices
+from .utility import get_host_list
 
 __all__ = ["main"]
 
@@ -26,6 +30,13 @@ app = typer.Typer()
 config_app = typer.Typer()
 app.add_typer(config_app, name="config", help="Manage configuration")
 logger = logging.getLogger(__name__)
+
+
+class ServiceType(str, Enum):
+    """Service type for systemd installation."""
+
+    SERVER = "server"
+    CLIENT = "client"
 
 
 def version_callback(value: bool) -> None:
@@ -99,6 +110,26 @@ def server(
     server.start()
 
 
+@app.command(name="client-service")
+def client_service_command(
+    ctx: typer.Context,
+) -> None:
+    """Start the USB client service that accepts socket commands."""
+    debug = ctx.obj.get("debug", False)
+    log_level = logging.DEBUG if debug else logging.INFO
+
+    # Set log level for non-debug mode (debug mode already configured in callback)
+    if not debug:
+        setup_logging(logging.INFO)
+
+    logger.info(
+        f"Starting client service {__version__} with log level: "
+        f"{logging.getLevelName(log_level)}"
+    )
+    service = ClientService()
+    service.start()
+
+
 @app.command(name="list")
 def list_command(
     local: bool = typer.Option(
@@ -137,18 +168,6 @@ def list_command(
                     typer.echo(device)
             else:
                 typer.echo("No devices")
-
-
-def get_host_list(host: str | None) -> list[str]:
-    """Get list of server hosts from argument or config."""
-    if host:
-        servers = [host]
-    else:
-        servers = get_servers()
-    if not servers:
-        logger.warning("No servers configured, defaulting to localhost")
-        servers = ["localhost"]
-    return servers
 
 
 @app.command()
@@ -260,10 +279,14 @@ def find(
 
 @app.command()
 def install_service(
-    system: bool = typer.Option(
+    service_type: Annotated[
+        ServiceType,
+        typer.Argument(help="Service type to install: 'server' or 'client'"),
+    ] = ServiceType.SERVER,
+    user_service: bool = typer.Option(
         False,
-        "--system",
-        help="Install as system service (requires sudo/root)",
+        "--user-service",
+        help="Install as user service instead of system service",
     ),
     user: str | None = typer.Option(
         None,
@@ -272,9 +295,11 @@ def install_service(
         help="User to run the service as (default: current user)",
     ),
 ) -> None:
-    """Install usb-remote server as a systemd service."""
+    """Install usb-remote service as a systemd service (defaults to system service)."""
     try:
-        install_systemd_service(user=user, system_wide=system)
+        install_systemd_service(
+            user=user, system_wide=not user_service, service_type=service_type.value
+        )
     except RuntimeError as e:
         typer.echo(f"Installation failed: {e}", err=True)
         raise typer.Exit(1) from e
@@ -282,15 +307,21 @@ def install_service(
 
 @app.command()
 def uninstall_service(
-    system: bool = typer.Option(
+    service_type: Annotated[
+        ServiceType,
+        typer.Argument(help="Service type to uninstall: 'server' or 'client'"),
+    ] = ServiceType.SERVER,
+    user_service: bool = typer.Option(
         False,
-        "--system",
-        help="Uninstall system service (requires sudo/root)",
+        "--user-service",
+        help="Uninstall user service instead of system service",
     ),
 ) -> None:
-    """Uninstall usb-remote server systemd service."""
+    """Uninstall usb-remote systemd service (defaults to system service)."""
     try:
-        uninstall_systemd_service(system_wide=system)
+        uninstall_systemd_service(
+            system_wide=not user_service, service_type=service_type.value
+        )
     except RuntimeError as e:
         typer.echo(f"Uninstallation failed: {e}", err=True)
         raise typer.Exit(1) from e

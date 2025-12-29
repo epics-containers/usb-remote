@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 logger = logging.getLogger(__name__)
 
 DEFAULT_CONFIG_PATH = Path.home() / ".config" / "usb-remote" / "usb-remote.config"
+SYSTEMD_CONFIG_PATH = Path("/etc/usb-remote-client/usb-remote.config")
 DEFAULT_TIMEOUT = 5.0
 
 
@@ -76,8 +77,9 @@ def discover_config_path() -> Path | None:
     """
     Discover config file path using the following priority:
     1. Environment variable USB_REMOTE_CONFIG
-    2. Local .usb-remote.config in current directory
-    3. Default ~/.config/usb_remote/usb-remote.config
+    2. /etc/usb-remote-client/usb-remote-client.config (if running as systemd service)
+    3. Local .usb-remote.config in current directory
+    4. Default ~/.config/usb_remote/usb-remote.config
 
     Returns:
         Path to config file if found, None otherwise.
@@ -92,7 +94,12 @@ def discover_config_path() -> Path | None:
         else:
             logger.warning(f"USB_REMOTE_CONFIG points to non-existent file: {env_path}")
 
-    # 2. Check local directory
+    # 2. Check systemd config (when running as systemd service)
+    if os.environ.get("INVOCATION_ID") and SYSTEMD_CONFIG_PATH.exists():
+        logger.debug(f"Using systemd config: {SYSTEMD_CONFIG_PATH}")
+        return SYSTEMD_CONFIG_PATH
+
+    # 3. Check local directory
     local_config = Path.cwd() / ".usb-remote.config"
     if local_config.exists():
         logger.debug(f"Using local config: {local_config}")

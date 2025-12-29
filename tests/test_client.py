@@ -232,9 +232,7 @@ class TestDetachCommand:
 class TestMultiServerOperations:
     """Test multi-server attach/detach operations."""
 
-    def test_attach_multi_server_single_match(
-        self, mock_usb_devices, mock_socket, mock_config
-    ):
+    def test_attach_multi_server_single_match(self, mock_usb_devices, mock_socket):
         """Test attach across multiple servers with single match."""
         servers = ["server1", "server2"]
         # Need sockets for: find on server1 (not found), find on server2 (success),
@@ -249,15 +247,14 @@ class TestMultiServerOperations:
                     mock_socket(),  # attach on server2
                 ],
             ),
-            patch("usb_remote.__main__.get_servers", return_value=servers),
+            patch("usb_remote.utility.get_servers", return_value=servers),
+            patch("usb_remote.config.get_timeout", return_value=0.1),
         ):
             result = runner.invoke(app, ["attach", "--id", "1234:5678"])
             assert result.exit_code == 0
             assert "Test Device 1" in result.stdout
 
-    def test_detach_multi_server_single_match(
-        self, mock_usb_devices, mock_socket, mock_config
-    ):
+    def test_detach_multi_server_single_match(self, mock_usb_devices, mock_socket):
         """Test detach across multiple servers with single match."""
         servers = ["server1", "server2"]
         # Need sockets for: find on server1 (success), find on server2 (not found),
@@ -272,12 +269,13 @@ class TestMultiServerOperations:
                     mock_socket(),  # detach on server1
                 ],
             ),
-            patch("usb_remote.__main__.get_servers", return_value=servers),
+            patch("usb_remote.utility.get_servers", return_value=servers),
+            patch("usb_remote.config.get_timeout", return_value=0.1),
         ):
             result = runner.invoke(app, ["detach", "--desc", "Test"])
             assert result.exit_code == 0
 
-    def test_attach_multi_server_multiple_matches_fails(self, mock_socket, mock_config):
+    def test_attach_multi_server_multiple_matches_fails(self, mock_socket):
         """Test attach fails with multiple matches without --first."""
         servers = ["server1", "server2"]
         # Both servers return a matching device
@@ -290,14 +288,15 @@ class TestMultiServerOperations:
                     mock_socket(),  # find on server2 - success
                 ],
             ),
-            patch("usb_remote.__main__.get_servers", return_value=servers),
+            patch("usb_remote.utility.get_servers", return_value=servers),
+            patch("usb_remote.config.get_timeout", return_value=0.1),
         ):
             result = runner.invoke(app, ["attach", "--desc", "Test"])
             assert result.exit_code != 0
             assert result.exception is not None
 
     def test_attach_multi_server_multiple_matches_with_first(
-        self, mock_usb_devices, mock_socket, mock_config
+        self, mock_usb_devices, mock_socket
     ):
         """Test attach succeeds with multiple matches when --first is used."""
         servers = ["server1", "server2"]
@@ -313,12 +312,13 @@ class TestMultiServerOperations:
                     mock_socket(),  # attach on server1 (first match)
                 ],
             ),
-            patch("usb_remote.__main__.get_servers", return_value=servers),
+            patch("usb_remote.utility.get_servers", return_value=servers),
+            patch("usb_remote.config.get_timeout", return_value=0.1),
         ):
             result = runner.invoke(app, ["attach", "--desc", "Test", "--first"])
             assert result.exit_code == 0
 
-    def test_attach_multi_server_no_match(self, mock_config):
+    def test_attach_multi_server_no_match(self):
         """Test attach across multiple servers with no match."""
         servers = ["server1", "server2"]
         # Both servers return error (device not found)
@@ -331,7 +331,8 @@ class TestMultiServerOperations:
                     create_error_socket(),  # find on server2 - not found
                 ],
             ),
-            patch("usb_remote.__main__.get_servers", return_value=servers),
+            patch("usb_remote.utility.get_servers", return_value=servers),
+            patch("usb_remote.config.get_timeout", return_value=0.1),
         ):
             result = runner.invoke(app, ["attach", "--id", "9999:9999"])
             assert result.exit_code != 0

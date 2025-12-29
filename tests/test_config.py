@@ -150,7 +150,11 @@ class TestDiscoverConfigPath:
                 with patch(
                     "usb_remote.config.DEFAULT_CONFIG_PATH", tmp_path / "default"
                 ):
-                    result = discover_config_path()
+                    with patch(
+                        "usb_remote.config.SYSTEMD_CONFIG_PATH",
+                        tmp_path / "systemd",
+                    ):
+                        result = discover_config_path()
 
         # Should skip to next priority (none found)
         assert result is None
@@ -162,7 +166,10 @@ class TestDiscoverConfigPath:
 
         with patch.dict(os.environ, {}, clear=True):
             with patch.object(Path, "cwd", return_value=tmp_path):
-                result = discover_config_path()
+                with patch(
+                    "usb_remote.config.SYSTEMD_CONFIG_PATH", tmp_path / "systemd"
+                ):
+                    result = discover_config_path()
 
         assert result == local_config
 
@@ -175,7 +182,11 @@ class TestDiscoverConfigPath:
         with patch.dict(os.environ, {}, clear=True):
             with patch.object(Path, "cwd", return_value=tmp_path):
                 with patch("usb_remote.config.DEFAULT_CONFIG_PATH", default_config):
-                    result = discover_config_path()
+                    with patch(
+                        "usb_remote.config.SYSTEMD_CONFIG_PATH",
+                        tmp_path / "systemd",
+                    ):
+                        result = discover_config_path()
 
         assert result == default_config
 
@@ -186,7 +197,11 @@ class TestDiscoverConfigPath:
                 with patch(
                     "usb_remote.config.DEFAULT_CONFIG_PATH", tmp_path / "nonexistent"
                 ):
-                    result = discover_config_path()
+                    with patch(
+                        "usb_remote.config.SYSTEMD_CONFIG_PATH",
+                        tmp_path / "systemd",
+                    ):
+                        result = discover_config_path()
 
         assert result is None
 
