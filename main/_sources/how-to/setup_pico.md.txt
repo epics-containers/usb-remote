@@ -30,22 +30,24 @@ See <https://www.waveshare.com/wiki/Pico-OLED-1.3> for more details on using the
 ```python
 import select
 import sys
-import PicoOled13
 
-from hardware.outputs import display
+import PicoOled13
 
 # Set up the poll object
 poll_obj = select.poll()
 poll_obj.register(sys.stdin, select.POLLIN)
 
-async def main():
+
+def main():
     # Initialize the display
-    display=PicoOled13.get()
+    display = PicoOled13.get()
     display.clear()
-    display.text("Listening ...",0,0,0xffff)
+    display.text("Listening ...", 0, 0, 0xFFFF)
     display.show()
 
     sys.stdout.write("awaiting data ...\r")
+
+    line = 0
 
     while True:
         # Wait for input on stdin, waiting for 1000 ms
@@ -57,8 +59,10 @@ async def main():
 
             # Write the data to the display
             if len(data) > 0:
-                display.clear()
-                display.text(data,0,0,0xffff)
+                if line == 0:
+                    display.clear()
+                display.text(data, 0, line * 10, 0xFFFF)
+                line = (line + 1) % 7  # wrap around after 7 lines
                 display.show()
 
 main()

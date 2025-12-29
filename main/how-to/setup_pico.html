@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Setup Raspberry Pi Pico for MAC Address Display &#8212; usb-remote 2.3.2.dev3+g30bb854d9 documentation</title>
+    <title>Setup Raspberry Pi Pico for MAC Address Display &#8212; usb-remote 2.3.3.dev2+g7eeeec43b documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=d91e99da"></script>
+    <script src="../_static/documentation_options.js?v=7bb183cd"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -501,22 +501,24 @@
 <p>See <a class="reference external" href="https://www.waveshare.com/wiki/Pico-OLED-1.3">https://www.waveshare.com/wiki/Pico-OLED-1.3</a> for more details on using the display.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">select</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">PicoOled13</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">hardware.outputs</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">PicoOled13</span>
 
 <span class="c1"># Set up the poll object</span>
 <span class="n">poll_obj</span> <span class="o">=</span> <span class="n">select</span><span class="o">.</span><span class="n">poll</span><span class="p">()</span>
 <span class="n">poll_obj</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="p">,</span> <span class="n">select</span><span class="o">.</span><span class="n">POLLIN</span><span class="p">)</span>
 
-<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
     <span class="c1"># Initialize the display</span>
-    <span class="n">display</span><span class="o">=</span><span class="n">PicoOled13</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+    <span class="n">display</span> <span class="o">=</span> <span class="n">PicoOled13</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
     <span class="n">display</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
-    <span class="n">display</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;Listening ...&quot;</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mh">0xffff</span><span class="p">)</span>
+    <span class="n">display</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;Listening ...&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mh">0xFFFF</span><span class="p">)</span>
     <span class="n">display</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
     <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;awaiting data ...</span><span class="se">\r</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">line</span> <span class="o">=</span> <span class="mi">0</span>
 
     <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
         <span class="c1"># Wait for input on stdin, waiting for 1000 ms</span>
@@ -528,8 +530,10 @@
 
             <span class="c1"># Write the data to the display</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">display</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
-                <span class="n">display</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mh">0xffff</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">line</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">display</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+                <span class="n">display</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">line</span> <span class="o">*</span> <span class="mi">10</span><span class="p">,</span> <span class="mh">0xFFFF</span><span class="p">)</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="p">(</span><span class="n">line</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">7</span>  <span class="c1"># wrap around after 7 lines</span>
                 <span class="n">display</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
 <span class="n">main</span><span class="p">()</span>
