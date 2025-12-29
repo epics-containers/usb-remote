@@ -37,6 +37,10 @@ def mock_subprocess_run():
     - usbip port commands (for checking attached devices)
     """
 
+    # Track attached devices: {(server, busid): port_number}
+    attached_devices = {}
+    next_port = [0]  # Use list to allow mutation in nested function
+
     def run_side_effect(command, *args, **kwargs):
         """Simulate subprocess.run behavior for USB/IP commands."""
 
@@ -132,6 +136,12 @@ Bus 002 Device 003: ID 0483:5740 STMicroelectronics Virtual COM Port
         # Mock sudo usbip attach commands (client side)
         elif command[0] == "sudo" and command[1] == "usbip" and command[2] == "attach":
             # sudo usbip attach -r localhost -b 1-1.1
+            # Extract server and busid from command
+            server = command[4] if len(command) > 4 else "localhost"
+            busid = command[6] if len(command) > 6 else "1-1.1"
+            port = next_port[0]
+            attached_devices[(server, busid)] = port
+            next_port[0] += 1
             return subprocess.CompletedProcess(
                 args=command,
                 returncode=0,
@@ -142,6 +152,12 @@ Bus 002 Device 003: ID 0483:5740 STMicroelectronics Virtual COM Port
         # Mock sudo usbip detach commands (client side)
         elif command[0] == "sudo" and command[1] == "usbip" and command[2] == "detach":
             # sudo usbip detach -p 00
+            port = command[4] if len(command) > 4 else "0"
+            # Remove the device with this port from attached_devices
+            for key, value in list(attached_devices.items()):
+                if str(value) == port:
+                    del attached_devices[key]
+                    break
             return subprocess.CompletedProcess(
                 args=command,
                 returncode=0,
@@ -150,11 +166,21 @@ Bus 002 Device 003: ID 0483:5740 STMicroelectronics Virtual COM Port
             )
 
         # Mock usbip port command (to check attached devices)
-        elif command[0] == "usbip" and command[1] == "port":
-            # Return empty initially, or with an attached device
-            # For now, return empty to simplify test
-            usbip_port_output = """Imported USB devices
+        elif command[0] in ("usbip", "sudo") and "port" in command:
+            # Return attached devices
+            if not attached_devices:
+                usbip_port_output = """Imported USB devices
 ====================
+"""
+            else:
+                usbip_port_output = "Imported USB devices\n====================\n"
+                for (server, busid), port in attached_devices.items():
+                    usbip_port_output += f"""Port {port:02d}: <Port in Use>
+       Raspberry Pi Pico
+       1-1 (2e8a:000a)
+           -> usbip://{server}:3240/{busid}
+           -> remote bus/dev 001/002
+
 """
             return subprocess.CompletedProcess(
                 args=command,
@@ -433,3 +459,83 @@ class TestSystemIntegration:
             and call.args[0][2] == "attach"
         ]
         assert len(attach_calls) >= 1, "Client should have called usbip attach"
+
+    @pytest.mark.filterwarnings("ignore::pytest.PytestUnhandledThreadExceptionWarning")
+    def test_detach_via_client_service(
+        self,
+        server_instance,
+        client_service_instance,
+        mock_subprocess_run,
+    ):
+        """
+        Test detaching a USB device via the client service.
+
+        This test:
+        1. Has a real server running that can unbind devices
+        2. Has a real client service running that accepts socket commands
+        3. First attaches a device to set up state
+        4. Sends a detach command to the client service socket
+        5. Verifies the full flow works end-to-end
+        """
+        # Import after mocks are set up
+        from usb_remote.client_api import ClientDeviceRequest
+
+        # First, attach a device so we have something to detach
+        attach_request = ClientDeviceRequest(
+            command="attach",
+            bus="1-1.1",
+            host="127.0.0.1",
+        )
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
+            sock.connect(client_service_instance.socket_path)
+            sock.sendall(attach_request.model_dump_json().encode("utf-8"))
+            sock.recv(4096)  # Wait for attach to complete
+
+        # Now detach the device
+        detach_request = ClientDeviceRequest(
+            command="detach",
+            bus="1-1.1",  # This bus_id matches our mock device
+            host="127.0.0.1",  # Use our test server
+        )
+
+        # Send request to client service via Unix socket
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
+            sock.connect(client_service_instance.socket_path)
+            sock.sendall(detach_request.model_dump_json().encode("utf-8"))
+
+            # Receive response
+            response_data = sock.recv(4096).decode("utf-8")
+
+        # Parse response
+        response = json.loads(response_data)
+
+        # Verify response structure
+        assert response["status"] == "success"
+        assert "data" in response
+        assert response["data"]["bus_id"] == "1-1.1"
+        assert response["server"] == "127.0.0.1"
+
+        # Verify that subprocess.run was called with the expected commands
+        # Check that we called usbip unbind on the server
+        unbind_calls = [
+            call
+            for call in mock_subprocess_run.call_args_list
+            if len(call.args) > 0
+            and len(call.args[0]) > 2
+            and call.args[0][0] == "sudo"
+            and call.args[0][1] == "usbip"
+            and call.args[0][2] == "unbind"
+        ]
+        assert len(unbind_calls) >= 1, "Server should have called usbip unbind"
+
+        # Check that we called usbip detach on the client
+        detach_calls = [
+            call
+            for call in mock_subprocess_run.call_args_list
+            if len(call.args) > 0
+            and len(call.args[0]) > 2
+            and call.args[0][0] == "sudo"
+            and call.args[0][1] == "usbip"
+            and call.args[0][2] == "detach"
+        ]
+        assert len(detach_calls) >= 1, "Client should have called usbip detach"
