@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 # Regex pattern to parse IP range specifications https://regex101.com/r/ChTMLn/1
 re_ip_range = re.compile(
-    r"^(?P<prefix>(?:\d{1,3}\.){3})(?P<start>\d{1,3})-(?P<stop>\d{1,3})"
+    r"^(?P<prefix>(?:\d{1,3}\.){3})(?P<start>\d{1,3})-(?P<stop>\d{1,3})$"
 )
 
 # Server port constant (also defined in api.py to avoid circular import)
