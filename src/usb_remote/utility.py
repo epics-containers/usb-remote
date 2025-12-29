@@ -2,12 +2,18 @@
 
 import ipaddress
 import logging
+import re
 import socket
 import subprocess
 
 from usb_remote.config import SERVER_PORT, get_server_ranges, get_servers
 
 logger = logging.getLogger(__name__)
+
+# Regex pattern to parse IP range specifications https://regex101.com/r/ChTMLn/1
+re_ip_range = re.compile(
+    r"^(?P<prefix>(?:\d{1,3}\.){3})(?P<start>\d{1,3})-(?P<stop>\d{1,3})"
+)
 
 # Server port constant (also defined in api.py to avoid circular import)
 
@@ -34,8 +40,7 @@ def _scan_ip_range(range_spec: str) -> list[str]:
 
     Args:
         range_spec: IP range specification like '192.168.1.30-40'
-                    or '192.168.1.30-192.168.1.40'
-                    Supports shorthand: '192.168.1.30-40' (just last octet)
+                    Only supports scanning the last octet as this keeps scans short.
 
     Returns:
         List of IP addresses that are responsive on SERVER_PORT
@@ -43,54 +48,36 @@ def _scan_ip_range(range_spec: str) -> list[str]:
     responsive_servers = []
 
     try:
-        # Parse the range specification
-        if "-" in range_spec:
-            start_ip_str, end_str = range_spec.split("-", 1)
-            start_ip = ipaddress.ip_address(start_ip_str.strip())
-            end_str = end_str.strip()
+        # Parse the range specification with regex
+        # Supports: '192.168.1.30-40' only, to keep scans short - only over last octet
+        match = re_ip_range.match(range_spec.strip())
+        if not match:
+            logger.error(f"Invalid range format: {range_spec}")
+            return responsive_servers
 
-            # Check if end is just a number (last octet) or full IP
-            if "." not in end_str and ":" not in end_str:
-                # Shorthand: just last octet specified
-                # Reconstruct full end IP by replacing last octet
-                start_parts = str(start_ip).rsplit(
-                    "." if start_ip.version == 4 else ":", 1
-                )
-                end_ip_str = (
-                    start_parts[0] + ("." if start_ip.version == 4 else ":") + end_str
-                )
-                end_ip = ipaddress.ip_address(end_ip_str)
+        d = match.groupdict()
+
+        start_ip_str, end_ip_str = d["prefix"] + d["start"], d["prefix"] + d["stop"]
+        start_ip = ipaddress.ip_address(start_ip_str)
+        end_ip = ipaddress.ip_address(end_ip_str)
+
+        logger.debug(f"Scanning IP range: {start_ip} - {end_ip}")
+
+        # Ensure both IPs are the same version
+        if start_ip.version != end_ip.version:
+            logger.error(f"IP version mismatch in range: {range_spec}")
+            return responsive_servers
+
+        # Scan each IP in the range
+        for current_int in range(int(start_ip), int(end_ip) + 1):
+            current_ip = ipaddress.ip_address(current_int)
+            ip_str = str(current_ip)
+            if _is_port_open(ip_str, SERVER_PORT):
+                logger.info(f"Found server at {ip_str}:{SERVER_PORT}")
+                responsive_servers.append(ip_str)
             else:
-                # Full IP address specified
-                end_ip = ipaddress.ip_address(end_str)
-
-            logger.debug(f"Scanning IP range: {start_ip} - {end_ip}")
-
-            # Ensure both IPs are the same version
-            if start_ip.version != end_ip.version:
-                logger.error(f"IP version mismatch in range: {range_spec}")
-                return responsive_servers
-
-            # Convert to integers for comparison
-            start_int = int(start_ip)
-            end_int = int(end_ip)
-
-            # Ensure start <= end
-            if start_int > end_int:
-                logger.error(f"Invalid IP range (start > end): {range_spec}")
-                return responsive_servers
-
-            # Scan each IP in the range
-            current_int = start_int
-            while current_int <= end_int:
-                current_ip = ipaddress.ip_address(current_int)
-                ip_str = str(current_ip)
-                if _is_port_open(ip_str, SERVER_PORT):
-                    logger.info(f"Found server at {ip_str}:{SERVER_PORT}")
-                    responsive_servers.append(ip_str)
-                else:
-                    logger.debug(f"No response from {ip_str}:{SERVER_PORT}")
-                current_int += 1
+                logger.debug(f"No response from {ip_str}:{SERVER_PORT}")
+            current_int += 1
 
     except ValueError as e:
         logger.error(f"Invalid IP range specification '{range_spec}': {e}")
