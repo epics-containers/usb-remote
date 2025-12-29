@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Setting up a DHCP Server for testing usb-remote &#8212; usb-remote 2.3.1.dev1+g0b6aafbae documentation</title>
+    <title>Client Service Setup &#8212; usb-remote 2.3.1.dev1+g0b6aafbae documentation</title>
   
   
   
@@ -47,7 +47,7 @@
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=30646c52"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'how-to/dhcp_server';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'how-to/client_service';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://epics-containers.github.io/usb-remote/switcher.json';
@@ -58,8 +58,8 @@
     <link rel="icon" href="../_static/dls-logo.svg"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Explanations" href="../explanations.html" />
-    <link rel="prev" title="Contribute to the project" href="contribute.html" />
+    <link rel="next" title="Create a New Raspberry Pi Boot Image From Scratch" href="new_raspi.html" />
+    <link rel="prev" title="Server Setup" href="server_setup.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="main" />
@@ -399,13 +399,13 @@
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="client_setup.html">Client Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="server_setup.html">Server Setup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="client_service.html">Client Service Setup</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Client Service Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="new_raspi.html">Create a New Raspberry Pi Boot Image From Scratch</a></li>
 <li class="toctree-l1"><a class="reference internal" href="updating_raspi_image.html">Updating an Existing Raspberry Pi Boot Image</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setup_pico.html">Setup Raspberry Pi Pico for MAC Address Display</a></li>
 <li class="toctree-l1"><a class="reference internal" href="run-container.html">Run in a container</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contribute.html">Contribute to the project</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Setting up a DHCP Server for testing usb-remote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dhcp_server.html">Setting up a DHCP Server for testing usb-remote</a></li>
 </ul>
 </div>
 </nav></div>
@@ -449,7 +449,7 @@
     
     <li class="breadcrumb-item"><a href="../how-to.html" class="nav-link">How-to Guides</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Setting up a DHCP Server for testing usb-remote</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Client Service Setup</span></li>
   </ul>
 </nav>
 </div>
@@ -466,73 +466,83 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="setting-up-a-dhcp-server-for-testing-usb-remote">
-<h1>Setting up a DHCP Server for testing usb-remote<a class="headerlink" href="#setting-up-a-dhcp-server-for-testing-usb-remote" title="Link to this heading">#</a></h1>
-<p>usb-remote should run in an isolated network such as a DLS Beamline Instrumentation network. This is because it is insecure by design, and is intended for use in trusted networks only.</p>
-<p>This may make testing difficult if you don’t have access to such a network.</p>
-<p>These instructions show how to set up a DHCP server on a spare NIC of your development machine. If your dev machine has only one NIC, you can use a USB-Ethernet adapter to add a second NIC.</p>
-<section id="install-dhcp-server-software">
-<h2>Install DHCP server software<a class="headerlink" href="#install-dhcp-server-software" title="Link to this heading">#</a></h2>
-<p>On Debian/Ubuntu based systems, install the isc-dhcp-server package:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>isc-dhcp-server
-</pre></div>
-</div>
-</section>
-<section id="setup-the-spare-nic">
-<h2>Setup the spare NIC<a class="headerlink" href="#setup-the-spare-nic" title="Link to this heading">#</a></h2>
-<p>This is easiest done in the Gnome Network Manager GUI.</p>
-<p>Find the second NIC and edit its settings.</p>
+  <section id="client-service-setup">
+<h1>Client Service Setup<a class="headerlink" href="#client-service-setup" title="Link to this heading">#</a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">client-service</span></code> command provides a Unix socket interface for attaching and detaching USB devices programmatically. This is useful when you want to integrate USB device attachment/detachment into other applications or services.</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>The client service:</p>
 <ul class="simple">
-<li><p>Set the IPv4 Method to “Manual”</p></li>
-<li><p>Set the Address to 192.168.2.1</p></li>
+<li><p>Runs as a long-lived process (foreground or systemd service)</p></li>
+<li><p>Listens on a Unix socket for JSON commands</p></li>
+<li><p>Accepts <code class="docutils literal notranslate"><span class="pre">attach</span></code> and <code class="docutils literal notranslate"><span class="pre">detach</span></code> requests</p></li>
+<li><p>Returns JSON responses with device information and local device paths</p></li>
+<li><p>Automatically detects the appropriate socket path based on execution context:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">/run/usb-remote-client/usb-remote-client.sock</span></code> when running as a systemd service</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">/tmp/usb-remote-client.sock</span></code> when running in foreground</p></li>
 </ul>
-<p>Other settings do not matter unless you want to set set up a route to the internet. Doing do does not create an isolated network, so is not recommended. (although it may be useful for commissioning - TODO: consider adding instructions for internet routing but no route to other local networks)</p>
+</li>
+</ul>
 </section>
-<section id="configure-the-dhcp-server">
-<h2>Configure the DHCP server<a class="headerlink" href="#configure-the-dhcp-server" title="Link to this heading">#</a></h2>
-<p>Edit the file <code class="docutils literal notranslate"><span class="pre">/etc/dhcp/dhcpd.conf</span></code> to look as follows:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>subnet 192.168.2.0 netmask 255.255.255.0 {
-  range 192.168.2.50 192.168.2.200;
-   option routers 192.168.2.1;
-#  option domain-name-servers 8.8.8.8, 8.8.4.4;
-  authoritative;
-}
-
-host pi1 {
-  hardware ethernet e4:5f:01:0e:3c:79;
-  fixed-address 192.168.2.31;
-}
-host pi2 {
-  hardware ethernet dc:a6:32:dd:77:85;
-  fixed-address 192.168.2.32;
-}
-host pi3 {
-  hardware ethernet dc:a6:32:66:c7:dd;
-  fixed-address 192.168.2.33;
-}
-host pi4 {
-  hardware ethernet e4:5f:01:94:43:6f;
-  fixed-address 192.168.2.34;
-}
+<section id="running-in-foreground">
+<h2>Running in Foreground<a class="headerlink" href="#running-in-foreground" title="Link to this heading">#</a></h2>
+<p>To run the client service directly in your terminal:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>usb-remote<span class="w"> </span>client-service
 </pre></div>
 </div>
-<p>Edit <code class="docutils literal notranslate"><span class="pre">/etc/default/isc-dhcp-server</span></code> to set the interfaces variable to the name of your spare NIC, e.g.</p>
-<p>WARNING: you definitely DO NOT want to set this to your main NIC, or you will break your network connection and the rest of your LAN!</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>INTERFACESv4=enxc8a362b78de1
-INTERFACESv6=&quot;&quot;
+<p>This is useful for testing or development. The service will listen on <code class="docutils literal notranslate"><span class="pre">/tmp/usb-remote-client.sock</span></code>.</p>
+</section>
+<section id="running-as-a-systemd-service">
+<h2>Running as a Systemd Service<a class="headerlink" href="#running-as-a-systemd-service" title="Link to this heading">#</a></h2>
+<p>For production use, it’s recommended to run the client service as a systemd service so it starts automatically at boot.</p>
+<section id="installation">
+<h3>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h3>
+<section id="system-wide-service-recommended">
+<h4>System-wide Service (Recommended)<a class="headerlink" href="#system-wide-service-recommended" title="Link to this heading">#</a></h4>
+<p>For speed and ease of use, you can install the client service using the <code class="docutils literal notranslate"><span class="pre">uv</span></code> tool as described below. However, if you prefer to use official package repositories, a good alternative is <code class="docutils literal notranslate"><span class="pre">pipx</span></code>. <code class="docutils literal notranslate"><span class="pre">pipx</span></code> allows you to install and run Python applications in isolated environments and is available on most Linux distributions.</p>
+<ol class="arabic">
+<li><p>Install <code class="docutils literal notranslate"><span class="pre">uv</span></code> (if not already installed).</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-LsSfO<span class="w"> </span>https://astral.sh/uv/install.sh
+sudo<span class="w"> </span>bash<span class="w"> </span>install.sh
+</pre></div>
+</div>
+</li>
+<li><p>Install the client service:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>-s<span class="w"> </span><span class="c1"># uv (installed by root) requires the root profile so use sudo -s</span>
+uvx<span class="w"> </span>usb-remote<span class="w"> </span>install-service<span class="w"> </span>--service-type<span class="w"> </span>client
+systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>--now<span class="w"> </span>usb-remote-client.service
+<span class="nb">exit</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<p>Check service status:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>systemctl<span class="w"> </span>status<span class="w"> </span>usb-remote-client.service
+</pre></div>
+</div>
+<p>View service logs:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>journalctl<span class="w"> </span>-u<span class="w"> </span>usb-remote-client.service<span class="w"> </span>-f
 </pre></div>
 </div>
 </section>
-<section id="restart-the-dhcp-server">
-<h2>Restart the DHCP server<a class="headerlink" href="#restart-the-dhcp-server" title="Link to this heading">#</a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>isc-dhcp-server
+</section>
+<section id="uninstallation">
+<h3>Uninstallation<a class="headerlink" href="#uninstallation" title="Link to this heading">#</a></h3>
+<p>To uninstall the systemd service:</p>
+<p>System-wide service:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>-s
+uvx<span class="w"> </span>usb-remote<span class="w"> </span>uninstall-service<span class="w"> </span>client
+<span class="nb">exit</span>
 </pre></div>
 </div>
 </section>
-<section id="connect-your-usb-remote-servers-to-the-test-network">
-<h2>Connect your usb-remote servers to the test network<a class="headerlink" href="#connect-your-usb-remote-servers-to-the-test-network" title="Link to this heading">#</a></h2>
-<p>You can add a single usb-remote server plugged directly into your spare NIC or multiple servers. For multiple servers you will need a network switch plugged into your spare NIC.</p>
-<p>When you boot the remote servers they should get an IP address in the range 192.168.2.10 to 192.168.2.100 or a fixed address if you listed their MAC addresses in the DHCP server configuration above.</p>
+</section>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">#</a></h2>
+<p>The client service uses the same configuration file format as the regular <code class="docutils literal notranslate"><span class="pre">usb-remote</span></code> client commands, see <a class="reference internal" href="../reference/config.html"><span class="std std-doc">Client Configuration File</span></a>.</p>
+<p>IMPORTANT: when running as a systemd service, the configuration file is read from the system-wide location:
+<code class="docutils literal notranslate"><span class="pre">/etc/usb-remote-client/usb-remote.config</span></code></p>
 </section>
 </section>
 
@@ -547,20 +557,20 @@ INTERFACESv6=&quot;&quot;
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="contribute.html"
+       href="server_setup.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Contribute to the project</p>
+        <p class="prev-next-title">Server Setup</p>
       </div>
     </a>
     <a class="right-next"
-       href="../explanations.html"
+       href="new_raspi.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Explanations</p>
+        <p class="prev-next-title">Create a New Raspberry Pi Boot Image From Scratch</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -583,11 +593,17 @@ INTERFACESv6=&quot;&quot;
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-dhcp-server-software">Install DHCP server software</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setup-the-spare-nic">Setup the spare NIC</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configure-the-dhcp-server">Configure the DHCP server</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#restart-the-dhcp-server">Restart the DHCP server</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#connect-your-usb-remote-servers-to-the-test-network">Connect your usb-remote servers to the test network</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-in-foreground">Running in Foreground</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-as-a-systemd-service">Running as a Systemd Service</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#system-wide-service-recommended">System-wide Service (Recommended)</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#uninstallation">Uninstallation</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration">Configuration</a></li>
 </ul>
   </nav></div>
 
@@ -595,7 +611,7 @@ INTERFACESv6=&quot;&quot;
 
   
   <div class="tocsection editthispage">
-    <a href="https://github.com/epics-containers/usb-remote/edit/main/docs/how-to/dhcp_server.md">
+    <a href="https://github.com/epics-containers/usb-remote/edit/main/docs/how-to/client_service.md">
       <i class="fa-solid fa-pencil"></i>
       
       
@@ -611,7 +627,7 @@ INTERFACESv6=&quot;&quot;
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../_sources/how-to/dhcp_server.md.txt"
+      <li><a href="../_sources/how-to/client_service.md.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>

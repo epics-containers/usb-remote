@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>usb-remote Architecture &#8212; usb-remote 2.2.3.dev4+g00cb705f4 documentation</title>
+    <title>Architecture &#8212; usb-remote 2.3.1.dev1+g0b6aafbae documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=81a1aeb8"></script>
+    <script src="../_static/documentation_options.js?v=b19423be"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -59,7 +59,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Connecting to GovWiFi" href="govwifi_setup.html" />
-    <link rel="prev" title="Client Configuration File" href="config.html" />
+    <link rel="prev" title="Server Socket API" href="server_socket_api.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="main" />
@@ -399,7 +399,9 @@
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="recommended_hardware.html">Recommend Server Hardware</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">Client Configuration File</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">usb-remote Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="client_service_api.html">Client Service Socket API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="server_socket_api.html">Server Socket API</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="govwifi_setup.html">Connecting to GovWiFi</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../_api/usb_remote.html">API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
@@ -447,7 +449,7 @@
     
     <li class="breadcrumb-item"><a href="../reference.html" class="nav-link">Reference</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">usb-remote Architecture</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Architecture</span></li>
   </ul>
 </nav>
 </div>
@@ -464,9 +466,9 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="usb-remote-architecture">
-<h1>usb-remote Architecture<a class="headerlink" href="#usb-remote-architecture" title="Link to this heading">#</a></h1>
-<p>This document explains the architecture and design of usb-remote (Anywhere USB).</p>
+  <section id="architecture">
+<h1>Architecture<a class="headerlink" href="#architecture" title="Link to this heading">#</a></h1>
+<p>This document explains the architecture and design of usb-remote.</p>
 <section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
 <p>usb-remote is a client-server system for sharing USB devices over a network using the USB/IP protocol. It provides a high-level Python interface with automatic device discovery across multiple servers.</p>
@@ -826,12 +828,12 @@ Protocol:
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="config.html"
+       href="server_socket_api.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Client Configuration File</p>
+        <p class="prev-next-title">Server Socket API</p>
       </div>
     </a>
     <a class="right-next"

@@ -73,8 +73,8 @@ sudo systemctl status usbipd
 sudo systemctl status usb-remote
 
 # check their logs for errors
-sudo journalctl -u usbipd -e
-sudo journalctl -u usb-remote -e
+journalctl -u usbipd -e
+journalctl -u usb-remote -e
 ```
 
 

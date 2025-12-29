@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Client Configuration File &#8212; usb-remote 2.3.1.dev1+g0b6aafbae documentation</title>
+    <title>Client Service Socket API &#8212; usb-remote 2.3.1.dev1+g0b6aafbae documentation</title>
   
   
   
@@ -47,7 +47,7 @@
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=30646c52"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'reference/config';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'reference/client_service_api';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://epics-containers.github.io/usb-remote/switcher.json';
@@ -58,8 +58,8 @@
     <link rel="icon" href="../_static/dls-logo.svg"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Client Service Socket API" href="client_service_api.html" />
-    <link rel="prev" title="Recommend Server Hardware" href="recommended_hardware.html" />
+    <link rel="next" title="Server Socket API" href="server_socket_api.html" />
+    <link rel="prev" title="Client Configuration File" href="config.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="main" />
@@ -398,8 +398,8 @@
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="recommended_hardware.html">Recommend Server Hardware</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Client Configuration File</a></li>
-<li class="toctree-l1"><a class="reference internal" href="client_service_api.html">Client Service Socket API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">Client Configuration File</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Client Service Socket API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="server_socket_api.html">Server Socket API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="govwifi_setup.html">Connecting to GovWiFi</a></li>
@@ -449,7 +449,7 @@
     
     <li class="breadcrumb-item"><a href="../reference.html" class="nav-link">Reference</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Client Configuration File</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Client Service Socket API</span></li>
   </ul>
 </nav>
 </div>
@@ -466,40 +466,144 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="client-configuration-file">
-<h1>Client Configuration File<a class="headerlink" href="#client-configuration-file" title="Link to this heading">#</a></h1>
-<p>The client configuration determines which USB device servers the <code class="docutils literal notranslate"><span class="pre">usb-remote</span></code> client will attempt to connect to.</p>
-<section id="configuration-via-the-cli">
-<h2>Configuration via the CLI<a class="headerlink" href="#configuration-via-the-cli" title="Link to this heading">#</a></h2>
-<p>You can specify a configuration file directly using the <code class="docutils literal notranslate"><span class="pre">config</span></code> command with any <code class="docutils literal notranslate"><span class="pre">usb-remote</span></code> command:</p>
-<p>see help for details:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>usb-remote<span class="w"> </span>config<span class="w"> </span>--help
+  <section id="client-service-socket-api">
+<h1>Client Service Socket API<a class="headerlink" href="#client-service-socket-api" title="Link to this heading">#</a></h1>
+<p>The client service accepts JSON requests on the Unix socket and returns JSON responses.</p>
+<section id="request-format">
+<h2>Request Format<a class="headerlink" href="#request-format" title="Link to this heading">#</a></h2>
+<p>All requests follow this JSON structure:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;attach&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1-1.4&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;bus&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;serial&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;desc&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;first&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;host&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Fields:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">command</span></code>: Either <code class="docutils literal notranslate"><span class="pre">&quot;attach&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;detach&quot;</span></code> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">id</span></code>: Bus ID of the device (e.g., “1-1.4”)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bus</span></code>: Bus number filter</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">serial</span></code>: Serial number filter</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">desc</span></code>: Description filter (substring match)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">first</span></code>: If true, use first matching device if multiple matches</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">host</span></code>: Specific server hostname/IP to query (if null, queries all configured servers)</p></li>
+</ul>
+<p>You must provide at least one of: <code class="docutils literal notranslate"><span class="pre">id</span></code>, <code class="docutils literal notranslate"><span class="pre">bus</span></code>, <code class="docutils literal notranslate"><span class="pre">serial</span></code>, or <code class="docutils literal notranslate"><span class="pre">desc</span></code> to identify the device.</p>
+</section>
+<section id="response-format">
+<h2>Response Format<a class="headerlink" href="#response-format" title="Link to this heading">#</a></h2>
+<section id="success-response">
+<h3>Success Response<a class="headerlink" href="#success-response" title="Link to this heading">#</a></h3>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;success&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;bus_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1-1.4&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;device_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;vid=0x1234 pid=0x5678&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;USB Device Description&quot;</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;server&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;192.168.1.100&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;local_devices&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;/dev/ttyUSB0&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;/dev/ttyUSB1&quot;</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Fields:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">status</span></code>: Always <code class="docutils literal notranslate"><span class="pre">&quot;success&quot;</span></code> for successful operations</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code>: The USB device information</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">bus_id</span></code>: The USB bus ID on the remote server</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">device_id</span></code>: Vendor and product IDs</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">description</span></code>: Human-readable device description</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">server</span></code>: The server hostname/IP where the device was found</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">local_devices</span></code>: List of local device files created (for attach operations)</p></li>
+</ul>
+</section>
+<section id="error-response">
+<h3>Error Response<a class="headerlink" href="#error-response" title="Link to this heading">#</a></h3>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;error&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Error description&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Status values:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;error&quot;</span></code>: General error (invalid request, connection error, etc.)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;not_found&quot;</span></code>: No device matching the criteria was found</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;multiple_matches&quot;</span></code>: Multiple devices matched and <code class="docutils literal notranslate"><span class="pre">first</span></code> was not set to <code class="docutils literal notranslate"><span class="pre">true</span></code></p></li>
+</ul>
+</section>
+</section>
+<section id="usage-examples">
+<h2>Usage Examples<a class="headerlink" href="#usage-examples" title="Link to this heading">#</a></h2>
+<section id="using-netcat">
+<h3>Using netcat<a class="headerlink" href="#using-netcat" title="Link to this heading">#</a></h3>
+<p>Attach a device:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;{&quot;command&quot;:&quot;attach&quot;,&quot;desc&quot;:&quot;Arduino&quot;,&quot;first&quot;:true}&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>nc<span class="w"> </span>-U<span class="w"> </span>/tmp/usb-remote-client.sock
+</pre></div>
+</div>
+<p>Detach a device by bus ID:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;{&quot;command&quot;:&quot;detach&quot;,&quot;id&quot;:&quot;1-1.4&quot;}&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>nc<span class="w"> </span>-U<span class="w"> </span>/tmp/usb-remote-client.sock
 </pre></div>
 </div>
 </section>
-<section id="file-location-priority">
-<h2>File Location Priority<a class="headerlink" href="#file-location-priority" title="Link to this heading">#</a></h2>
-<p>The client discovers configuration files in the following priority order:</p>
-<ol class="arabic simple">
-<li><p><strong>Environment variable</strong>: <code class="docutils literal notranslate"><span class="pre">USB_REMOTE_CONFIG=/path/to/config.yaml</span></code></p></li>
-<li><p><strong>Project-local config</strong>: <code class="docutils literal notranslate"><span class="pre">.usb-remote.config</span></code> in current directory</p></li>
-<li><p><strong>User config</strong>: <code class="docutils literal notranslate"><span class="pre">~/.config/usb-remote/usb-remote.config</span></code> (default)</p></li>
-</ol>
-</section>
-<section id="file-format">
-<h2>File Format<a class="headerlink" href="#file-format" title="Link to this heading">#</a></h2>
-<p>Create a configuration file with the following YAML format:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># list of USB device servers: DNS names or IP addresses</span>
-<span class="nt">servers</span><span class="p">:</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">raspberrypi</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.1.100</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">usb-server-1.local</span>
+<section id="using-python">
+<h3>Using Python<a class="headerlink" href="#using-python" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">socket</span>
 
-<span class="c1"># Optional: Connection timeout in seconds (default: 5.0)</span>
-<span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5.0</span>
+<span class="c1"># Connect to the client service socket</span>
+<span class="n">sock</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_UNIX</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SOCK_STREAM</span><span class="p">)</span>
+<span class="n">sock</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;/tmp/usb-remote-client.sock&quot;</span><span class="p">)</span>
+
+<span class="c1"># Send attach request</span>
+<span class="n">request</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;command&quot;</span><span class="p">:</span> <span class="s2">&quot;attach&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;desc&quot;</span><span class="p">:</span> <span class="s2">&quot;Arduino&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;first&quot;</span><span class="p">:</span> <span class="kc">True</span>
+<span class="p">}</span>
+<span class="n">sock</span><span class="o">.</span><span class="n">sendall</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">request</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span> <span class="o">+</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="c1"># Receive response</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">sock</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">4096</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;success&quot;</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Attached device: </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;description&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Local devices: </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;local_devices&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;message&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">sock</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>See <a class="reference download internal" download="" href="../_downloads/119745cce079e72c6c0696a0c691df99/usb-remote.config.example"><span class="xref download myst">usb-remote.config.example</span></a> for a sample configuration file.</p>
+</section>
+<section id="using-curl-with-socat">
+<h3>Using curl (with socat)<a class="headerlink" href="#using-curl-with-socat" title="Link to this heading">#</a></h3>
+<p>You can use <code class="docutils literal notranslate"><span class="pre">socat</span></code> to create a bridge between HTTP and the Unix socket for testing:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Terminal 1: Start socat bridge</span>
+socat<span class="w"> </span>TCP-LISTEN:8080,reuseaddr,fork<span class="w"> </span>UNIX-CONNECT:/tmp/usb-remote-client.sock
+
+<span class="c1"># Terminal 2: Send requests via HTTP</span>
+curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://localhost:8080<span class="w"> </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;command&quot;:&quot;attach&quot;,&quot;desc&quot;:&quot;Arduino&quot;,&quot;first&quot;:true}&#39;</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="#"><span class="std std-doc">Client Service Socket API</span></a> - Client service API documentation</p></li>
+<li><p><a class="reference internal" href="../how-to/server_setup.html"><span class="std std-doc">Server Setup</span></a> - Server installation and configuration</p></li>
+<li><p><a class="reference internal" href="architecture.html"><span class="std std-doc">Architecture</span></a> - System architecture overview</p></li>
+</ul>
 </section>
 </section>
 
@@ -514,20 +618,20 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="recommended_hardware.html"
+       href="config.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Recommend Server Hardware</p>
+        <p class="prev-next-title">Client Configuration File</p>
       </div>
     </a>
     <a class="right-next"
-       href="client_service_api.html"
+       href="server_socket_api.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Client Service Socket API</p>
+        <p class="prev-next-title">Server Socket API</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -550,9 +654,19 @@
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration-via-the-cli">Configuration via the CLI</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#file-location-priority">File Location Priority</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#file-format">File Format</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#request-format">Request Format</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#response-format">Response Format</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#success-response">Success Response</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#error-response">Error Response</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#usage-examples">Usage Examples</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-netcat">Using netcat</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-python">Using Python</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-curl-with-socat">Using curl (with socat)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
 </ul>
   </nav></div>
 
@@ -560,7 +674,7 @@
 
   
   <div class="tocsection editthispage">
-    <a href="https://github.com/epics-containers/usb-remote/edit/main/docs/reference/config.md">
+    <a href="https://github.com/epics-containers/usb-remote/edit/main/docs/reference/client_service_api.md">
       <i class="fa-solid fa-pencil"></i>
       
       
@@ -576,7 +690,7 @@
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../_sources/reference/config.md.txt"
+      <li><a href="../_sources/reference/client_service_api.md.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>

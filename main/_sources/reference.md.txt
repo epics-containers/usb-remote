@@ -6,6 +6,8 @@ Technical reference material including APIs and release notes.
 :maxdepth: 1
 reference/recommended_hardware.md
 reference/config.md
+reference/client_service_api.md
+reference/server_socket_api.md
 reference/architecture.md
 reference/govwifi_setup.md
 

@@ -1,6 +1,6 @@
-# usb-remote Architecture
+# Architecture
 
-This document explains the architecture and design of usb-remote (Anywhere USB).
+This document explains the architecture and design of usb-remote.
 
 ## Overview
 

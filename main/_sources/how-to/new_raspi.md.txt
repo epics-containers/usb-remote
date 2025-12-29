@@ -166,7 +166,7 @@ IMPORTANT: These steps must be done before the first boot of the Raspberry Pi. T
 1. Install `usb-remote` system service.
     ```bash
     sudo -s # uv (installed by root) requires the root profile so use sudo -s
-    uvx usb-remote install-service --system
+    uvx usb-remote install-service server
     systemctl enable --now usb-remote
     systemctl status usb-remote # check it is running correctly
     exit

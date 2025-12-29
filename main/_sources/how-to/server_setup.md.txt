@@ -64,7 +64,7 @@ A quick way to install the `usb-remote` server is via the `uv` tool.
 
     ```bash
     sudo -s # uv (installed by root) requires the root profile so use sudo -s
-    uvx usb-remote install-service --system
+    uvx usb-remote install-service server
     systemctl enable --now usb-remote
     exit
     ```
