@@ -26,14 +26,15 @@ from .usbdevice import (
 )
 from .utility import run_command
 
-# Allow server port to be overridden via environment variable
-DEFAULT_SERVER_PORT = int(os.environ.get("USB_REMOTE_SERVER_PORT", SERVER_PORT))
 logger = logging.getLogger(__name__)
 
 
 class CommandServer:
-    def __init__(self, host: str = "0.0.0.0", port: int = DEFAULT_SERVER_PORT):
+    def __init__(self, host: str = "0.0.0.0", port: int | None = None):
         self.host = host
+        # Allow server port to be overridden via environment variable
+        if port is None:
+            port = int(os.environ.get("USB_REMOTE_SERVER_PORT", SERVER_PORT))
         self.port = port
         self.server_socket = None
         self.running = False

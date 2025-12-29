@@ -20,7 +20,7 @@ import pytest
 _original_invocation_id = os.environ.pop("INVOCATION_ID", None)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def mock_subprocess_run():
     """
     Mock subprocess.run to simulate USB/IP commands.
@@ -260,22 +260,23 @@ Bus 002 Device 003: ID 0483:5740 STMicroelectronics Virtual COM Port
                 yield mock_run2
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def server_port():
     """Provide a unique port for the test server."""
     import random
 
-    return random.randint(10000, 60000)
+    port = random.randint(10000, 60000)
+    # Set environment variable for the session
+    os.environ["USB_REMOTE_SERVER_PORT"] = str(port)
+    return port
 
 
-@pytest.fixture
-def server_instance(mock_subprocess_run, server_port, monkeypatch):
+@pytest.fixture(scope="session")
+def server_instance(mock_subprocess_run, server_port):
     """Launch a real CommandServer instance in a background thread."""
     # Import after mocks are set up
     from usb_remote.server import CommandServer
 
-    # Set the server port via environment variable
-    monkeypatch.setenv("USB_REMOTE_SERVER_PORT", str(server_port))
     server = CommandServer(host="127.0.0.1", port=server_port)
 
     # Start server in a background thread
@@ -283,15 +284,15 @@ def server_instance(mock_subprocess_run, server_port, monkeypatch):
     server_thread.start()
 
     # Wait for server to start
-    max_attempts = 50
+    max_attempts = 20
     for _ in range(max_attempts):
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                sock.settimeout(0.1)
+                sock.settimeout(0.05)
                 sock.connect(("127.0.0.1", server_port))
                 break
         except (TimeoutError, ConnectionRefusedError):
-            time.sleep(0.1)
+            time.sleep(0.01)
     else:
         raise RuntimeError("Server failed to start")
 
@@ -302,80 +303,86 @@ def server_instance(mock_subprocess_run, server_port, monkeypatch):
     server_thread.join(timeout=2)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
+def test_config(server_port):
+    """Create a test config for the session."""
+    from usb_remote.config import UsbRemoteConfig
+
+    return UsbRemoteConfig(servers=["127.0.0.1"], server_port=server_port, timeout=0.1)
+
+
+@pytest.fixture(scope="session")
 def client_service_instance(
-    mock_subprocess_run, server_port, server_instance, monkeypatch
+    mock_subprocess_run, server_port, server_instance, test_config
 ):
     """Launch a real ClientService instance in a background thread."""
     # Import after mocks are set up
+    from unittest.mock import patch
+
     from usb_remote.client_service import ClientService
-    from usb_remote.config import UsbRemoteConfig
 
     # Use a temporary socket path
     socket_path = tempfile.mktemp(suffix=".sock", prefix="usb-remote-test-")
 
     # Patch the config to use our test server port
+    with patch("usb_remote.config.get_config", return_value=test_config):
+        # Capture any exceptions from the service thread
+        service_exception = None
 
-    test_config = UsbRemoteConfig(
-        servers=["127.0.0.1"], server_port=server_port, timeout=0.5
-    )
-    monkeypatch.setattr("usb_remote.config.get_config", lambda: test_config)
-
-    # Capture any exceptions from the service thread
-    service_exception = None
-
-    def start_with_exception_handling():
-        nonlocal service_exception
-        try:
-            service.start()
-        except Exception as e:
-            service_exception = e
-            import traceback
-
-            traceback.print_exc()
-
-    service = ClientService(socket_path=socket_path)
-
-    # Start client service in a background thread
-    service_thread = threading.Thread(target=start_with_exception_handling, daemon=True)
-    service_thread.start()
-
-    # Wait for service to start
-    max_attempts = 50
-    for _ in range(max_attempts):
-        # Check if service thread hit an exception
-        if service_exception is not None:
-            raise RuntimeError(
-                f"Client service failed with exception: {service_exception}"
-            ) from service_exception
-
-        if Path(socket_path).exists():
-            # Try to connect to verify it's ready
+        def start_with_exception_handling():
+            nonlocal service_exception
             try:
-                with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
-                    sock.settimeout(0.1)
-                    sock.connect(socket_path)
-                    break
-            except (TimeoutError, ConnectionRefusedError, FileNotFoundError):
-                time.sleep(0.1)
-        else:
-            time.sleep(0.1)
-    else:
-        # Check if socket file was even created
-        if not Path(socket_path).exists():
-            raise RuntimeError(
-                f"Client service failed to start - socket file never "
-                f"created at {socket_path}"
-            )
-        raise RuntimeError(
-            f"Client service failed to start - socket exists but "
-            f"not accepting connections at {socket_path}"
+                service.start()
+            except Exception as e:
+                service_exception = e
+                import traceback
+
+                traceback.print_exc()
+
+        service = ClientService(socket_path=socket_path)
+
+        # Start client service in a background thread
+        service_thread = threading.Thread(
+            target=start_with_exception_handling, daemon=True
         )
+        service_thread.start()
 
-    yield service
+        # Wait for service to start
+        max_attempts = 20
+        for _ in range(max_attempts):
+            # Check if service thread hit an exception
+            if service_exception is not None:
+                raise RuntimeError(
+                    f"Client service failed with exception: {service_exception}"
+                ) from service_exception
 
-    # Cleanup
-    service.stop()
-    service_thread.join(timeout=2)
-    if Path(socket_path).exists():
-        Path(socket_path).unlink()
+            if Path(socket_path).exists():
+                # Try to connect to verify it's ready
+                try:
+                    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
+                        sock.settimeout(0.05)
+                        sock.connect(socket_path)
+                        break
+                except (TimeoutError, ConnectionRefusedError, FileNotFoundError):
+                    time.sleep(0.01)
+            else:
+                time.sleep(0.01)
+        else:
+            # Check if socket file was even created
+            if not Path(socket_path).exists():
+                raise RuntimeError(
+                    f"Client service failed to start - socket file never "
+                    f"created at {socket_path}"
+                )
+            raise RuntimeError(
+                f"Client service failed to start - socket exists but "
+                f"not accepting connections at {socket_path}"
+            )
+
+        yield service
+
+        # Cleanup
+        service.stop()
+        service_thread.join(timeout=2)
+        if Path(socket_path).exists():
+            Path(socket_path).unlink()
