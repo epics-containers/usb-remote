@@ -1,12 +1,11 @@
 # Changes here will be overwritten by Copier
-_commit: 5.0.1
+_commit: 5.4.0
 _src_path: https://github.com/diamondlightsource/python-copier-template
 author_email: giles.knap@diamond.ac.uk
 author_name: Giles Knap
 description: A client-server application for remotely sharing USB devices with usbip
 distribution_name: usb-remote
 docker: true
-docker_debug: false
 docs_type: sphinx
 git_platform: github.com
 github_org: epics-containers
