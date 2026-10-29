@@ -7,9 +7,14 @@
 
 Client-server software to share USB devices over the network.
 
-Source          | <https://github.com/epics-containers/usb-remote>
+What            | Where
 :---:           | :---:
+<<<<<<< before updating
 PyPI            | `uvx usb-remote --version`
+=======
+Source          | <https://github.com/epics-containers/usb-remote>
+PyPI            | `pip install usb-remote`
+>>>>>>> after updating
 Docker          | `docker run ghcr.io/epics-containers/usb-remote:latest`
 Documentation   | <https://epics-containers.github.io/usb-remote>
 Releases        | <https://github.com/epics-containers/usb-remote/releases>
