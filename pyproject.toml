@@ -10,6 +10,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
     "pydantic>=2.0.0",
@@ -27,7 +28,6 @@ requires-python = ">=3.11"
 
 [dependency-groups]
 dev = [
-    "copier",
     "myst-parser",
     "pre-commit",
     "pydata-sphinx-theme>=0.12",
@@ -52,6 +52,10 @@ GitHub = "https://github.com/epics-containers/usb-remote"
 [[project.authors]] # Further authors may be added by duplicating this section
 email = "giles.knap@diamond.ac.uk"
 name = "Giles Knap"
+
+[tool.uv]
+# Minimum uv to fix eMudhra CA cert incident (see discuss.python.org/t/109576)
+required-version = ">=0.13.5"
 
 [tool.setuptools_scm]
 version_file = "src/usb_remote/_version.py"
@@ -106,7 +110,7 @@ commands = [
     [
         "pyright",
         "--pythonpath",
-        ".venv/bin/python",
+        "{env:VIRTUAL_ENV}/bin/python",
         "src",
         "tests",
         { replace = "posargs", default = [
