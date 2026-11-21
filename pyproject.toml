@@ -1,15 +1,15 @@
 [build-system]
-requires = ["setuptools>=64", "setuptools_scm[toml]>=8"]
+requires = ["setuptools>=77.0.3", "setuptools_scm[toml]>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "usb-remote"
 classifiers = [
     "Development Status :: 3 - Alpha",
-    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
     "pydantic>=2.0.0",
@@ -21,13 +21,13 @@ dependencies = [
 ] # Add project dependencies here, e.g. ["click", "numpy"]
 description = "A client-server application for remotely sharing USB devices with usbip"
 dynamic = ["version"]
-license.file = "LICENSE"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 readme = "README.md"
 requires-python = ">=3.11"
 
 [dependency-groups]
 dev = [
-    "copier",
     "myst-parser",
     "pre-commit",
     "pydata-sphinx-theme>=0.12",
@@ -38,7 +38,7 @@ dev = [
     "sphinx-autobuild",
     "sphinx-copybutton",
     "sphinx-design",
-    "tox-uv",
+    "tox-uv-bare",
     "types-mock",
 ]
 
@@ -52,6 +52,10 @@ GitHub = "https://github.com/epics-containers/usb-remote"
 [[project.authors]] # Further authors may be added by duplicating this section
 email = "giles.knap@diamond.ac.uk"
 name = "Giles Knap"
+
+[tool.uv]
+# Minimum uv to fix eMudhra CA cert incident (see discuss.python.org/t/109576)
+required-version = ">=0.13.5"
 
 [tool.setuptools_scm]
 version_file = "src/usb_remote/_version.py"
@@ -86,6 +90,13 @@ env_list = ["pre-commit", "type-checking", "tests", "docs"]
 [tool.tox.env_run_base]
 # Pass all environment variables to the test environments
 passenv = ["*"]
+allowlist_externals = [
+    "pyright",
+    "pytest",
+    "pre-commit",
+    "sphinx-build",
+    "sphinx-autobuild",
+]
 
 [tool.tox.env.pre-commit]
 description = "Run pre-commit on all files"
@@ -106,7 +117,7 @@ commands = [
     [
         "pyright",
         "--pythonpath",
-        ".venv/bin/python",
+        "{env:VIRTUAL_ENV}/bin/python",
         "src",
         "tests",
         { replace = "posargs", default = [
